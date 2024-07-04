@@ -9,22 +9,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6d0c2341dcb1a64db419e41cc44439b, type: 3}
-  m_Name: PigThrowingBox
+  m_Script: {fileID: 11500000, guid: db952b313cfec6f4b843b1bef70ae5b8, type: 3}
+  m_Name: PigThrowingBombStats
   m_EditorClassIdentifier: 
   deathParticle: {fileID: 0}
   itemDrops: []
   dropForce: 0
   torque: 0
   maxHealth: 5
-  curHealth: 5
+  curHealth: 0
   jumpSpeed: 0.01
   fallSpeed: 0.01
   groundCheckDistance: 0.15
   wallCheckDistance: 3
   attackRange: 3
   boxSpeed: 8
-  timer: 0.011061801
+  timer: 0
   chargeSpeed: 0
   chargeTime: 0
   chargeDuration: 3
@@ -45,10 +45,10 @@ MonoBehaviour:
   dodgeForce: 3
   dodgeAngle: {x: 1, y: 1}
   dodgeDetectDistance: 1
-  noBoxChargeSpeed: 0.003
+  noBoxChargeSpeed: 0.03
   meleeAttackRange: 0.9
   meleeAttackRadius: 0.3
   meleeAttackDamage: 1
   attackDetails:
-  - 1
-  - -4.1187425
+  - 0
+  - 0

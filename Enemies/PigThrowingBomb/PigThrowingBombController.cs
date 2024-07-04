@@ -6,33 +6,32 @@ using PathBerserker2d;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 
-public class PigThrowingBoxController : MonoBehaviour
+public class PigThrowingBombController : MonoBehaviour
 {
     public Animator anim;
     public Rigidbody2D rb;
     public LayerMask whatIsGround, whatIsPlayer, whatIsDamageable, whatIsPickUp;
     public Transform groundCheck, wallCheck;
-    public PigThrowingBoxStatsSO stats;
-    public PigThrowingBoxBaseState currentState;
-    public PigThrowingBoxIdleState idleState;
-    public PigThrowingBoxDetectPlayerState playerDetectedState;
-    public PigThrowingBoxAttackState attackState;
-    public PigThrowingBoxPickingUpBoxState pickingUpBoxState;
-    public PigThrowingBoxChargeState chargeState;
-    public PigThrowingBoxHoldingBoxIdleState holdingBoxIdleState;
-    public PigThrowingBoxFindingBoxState findingBoxState;
-    public PigThrowingBoxDeathState deathState;
+    public PigThrowingBombStatsSO stats;
+    public PigThrowingBombBaseState currentState;
+    public PigThrowingBombIdleState idleState;
+    public PigThrowingBombPlayerDetectedState playerDetectedState;
+    public PigThrowingBombMeleeAttackState meleeAttackState;
+    public PigThrowingBombPickingUpBombState pickingUpBombState;
+    public PigThrowingBombChargeState chargeState;
+    public PigThrowingBombHoldingBombIdleState holdingBombIdleState;
+    public PigThrowingBombFindingBombState findingBombState;
+    public PigThrowingBombDeathState deathState;
     public PigThrowingBoxBackUpState backUpState;
-    public PigThrowingBoxGetHitState getHitState;
-    public PigThrowingBoxNoBoxChargeState noBoxChargeState;
-    public PigThrowingBoxMeleeAttackState meleeAttackState;
+    public PigThrowingBombGetHitState getHitState;
+    public PigThrowingBombHoldingBombChargeState holdingBombChargeState;
+    public PigThrowingBombRangeAttackState rangeAttackState;
     public GameObject alert;
     public Transform player;
     public Transform target;
     public NavAgent agent;
     public Transform holdSpot;
     public Transform attackHitBoxPos;
-    public GameObject box;
     public PlayerController playerController;
     public int facingDirection = -1;
     public float stateTime;
@@ -66,18 +65,17 @@ public class PigThrowingBoxController : MonoBehaviour
     public bool isJumping;
     public bool applyKnockBack = true;
     void Awake() {
-        idleState = new PigThrowingBoxIdleState(this, "Idle");
-        playerDetectedState = new PigThrowingBoxDetectPlayerState(this, "PlayerDetected");
-        pickingUpBoxState = new PigThrowingBoxPickingUpBoxState(this, "PickingUpBox");
-        chargeState = new PigThrowingBoxChargeState(this, "Charge");
-        attackState = new PigThrowingBoxAttackState(this, "Attack");
-        holdingBoxIdleState = new PigThrowingBoxHoldingBoxIdleState(this, "HoldingBoxIdle");
-        findingBoxState = new PigThrowingBoxFindingBoxState(this, "FindingBox");
-        deathState = new PigThrowingBoxDeathState(this, "Death");
-        backUpState = new PigThrowingBoxBackUpState(this, "BackUp");
-        getHitState = new PigThrowingBoxGetHitState(this, "GetHit");
-        noBoxChargeState = new PigThrowingBoxNoBoxChargeState(this, "NoBoxCharge");
-        meleeAttackState = new PigThrowingBoxMeleeAttackState(this, "MeleeAttack");
+        idleState = new PigThrowingBombIdleState(this, "Idle");
+        playerDetectedState = new PigThrowingBombPlayerDetectedState(this, "PlayerDetected");
+        pickingUpBombState = new PigThrowingBombPickingUpBombState(this, "PickingUpBomb");
+        chargeState = new PigThrowingBombChargeState(this, "Charge");
+        rangeAttackState = new PigThrowingBombRangeAttackState(this, "RangeAttack");
+        holdingBombIdleState = new PigThrowingBombHoldingBombIdleState(this, "HoldingBombIdle");
+        findingBombState = new PigThrowingBombFindingBombState(this, "FindingBomb");
+        deathState = new PigThrowingBombDeathState(this, "Death");
+        getHitState = new PigThrowingBombGetHitState(this, "GetHit");
+        holdingBombChargeState = new PigThrowingBombHoldingBombChargeState(this, "HoldingBombCharge");
+        meleeAttackState = new PigThrowingBombMeleeAttackState(this, "MeleeAttack");
         currentState = idleState;
         currentState.Enter();
     }
@@ -149,7 +147,7 @@ public class PigThrowingBoxController : MonoBehaviour
         }
     }
 
-    public void SwitchState(PigThrowingBoxBaseState newState) {
+    public void SwitchState(PigThrowingBombBaseState newState) {
         currentState.Exit();
         currentState = newState;
         currentState.Enter();
@@ -160,14 +158,14 @@ public class PigThrowingBoxController : MonoBehaviour
         return facingDirection;
     }
 
-    public void InstantiateBox() {
-        GameObject pooledBox = BoxObjectPooling.SharedInstance.GetPooledObject();
-        if (pooledBox != null) {
-            pooledBox.SetActive(true);
-            BoxProjectile box = pooledBox.GetComponent<BoxProjectile>();
-            box.transform.position = holdSpot.position;
-            box.transform.rotation = holdSpot.rotation;
-            box.InitializeProjectile(target, stats.boxSpeed, holdSpot);
+    public void InstantiateBomb() {
+        GameObject pooledBomb = BombObjectPooling.SharedInstance.GetPooledObject();
+        if (pooledBomb != null) {
+            pooledBomb.SetActive(true);
+            BombProjectile bomb = pooledBomb.GetComponent<BombProjectile>();
+            bomb.transform.position = holdSpot.position;
+            bomb.transform.rotation = holdSpot.rotation;
+            bomb.InitializeProjectile(target, stats.boxSpeed, holdSpot);
         } else {
             Debug.LogWarning("No boxes available in the pool.");
         }

@@ -8,53 +8,50 @@ public class Box : MonoBehaviour
 {
     private Animator anim;
     private Rigidbody2D rb;
-    private LayerMask whatIsPlayer;
-    private float damage = 2;
-    private float []attackDetails = new float [2];
-    private bool isExploded = false; 
-    [SerializeField] public Vector3 explodeRadius;
+    public LayerMask whatIsPlayer;
+    private PlayerController playerController;
     public GameObject[] itemsDrop;
     public PigThrowingBoxController pigThrowing;
     [SerializeField] public float dropForce;
     [SerializeField] public float torque;
+    [SerializeField] public float knockBackSpeedX, knockBackSpeedY;
+    public bool applyKnockBack = true;
+    private float maxHealth = 3;
+    private float curHealth;
+    private int playerFacingDirection;
 
 
     void Start() {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        playerController = GameObject.Find("Player").GetComponent<PlayerController>();
+        curHealth = maxHealth;
     }
 
     void  Update() {
-        if (isExploded) {
-            anim.SetTrigger("Hit");
-        }
-    }
 
-    void OnCollisionEnter2D(Collision2D collision) {
-        if (collision.transform.CompareTag("Player")) {
-            isExploded = true;
-            DropItems();
-            StartCoroutine(DestroyThisGameObjAfterHitAnim(0.15f));
-        } 
     }
 
     void OnTriggerEnter2D(Collider2D other) {
         if (other.CompareTag("PickUpHitBox")) {
             Debug.Log("BoxPickedUp");
-            Destroy(this.gameObject);
+            gameObject.SetActive(false);
         }
     }
 
-    void AttackHitBox() {
-        Collider2D[] detectedGameObj = Physics2D.OverlapBoxAll(transform.position, explodeRadius, whatIsPlayer);
-        attackDetails[0] = damage;
-        attackDetails[1] = transform.position.magnitude;
-
-        foreach (Collider2D collider in detectedGameObj) {
-            if (collider.gameObject.CompareTag("Player")) {
-                collider.transform.SendMessage("TakeDamage", attackDetails);
-            }
+    private void TakeDamage(float[] attackDetails) {
+        curHealth -= attackDetails[0];
+        playerFacingDirection = playerController.GetFacingDirection();
+        if (curHealth > 0.1f && applyKnockBack) {
+            KnockBack();
+        } else {
+            DropItems();
+            gameObject.SetActive(false);   
         }
+    }
+
+    void KnockBack() {
+        rb.velocity = new Vector2 (knockBackSpeedX * playerFacingDirection, knockBackSpeedY);
     }
 
     void DropItems() {
@@ -72,10 +69,6 @@ public class Box : MonoBehaviour
 
     IEnumerator DestroyThisGameObjAfterHitAnim(float delay) {
         yield return new WaitForSeconds(delay);
-        this.gameObject.SetActive(false);
-    }
-
-    void OnDrawGizmos() {
-        Gizmos.DrawWireCube(transform.position, explodeRadius);
+        gameObject.SetActive(false);
     }
 }

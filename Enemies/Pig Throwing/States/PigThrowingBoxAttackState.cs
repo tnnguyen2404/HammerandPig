@@ -15,6 +15,7 @@ public class PigThrowingBoxAttackState : PigThrowingBoxBaseState
     {
         base.Enter();
 
+        pigThrowing.target = pigThrowing.player.transform;
         pigThrowing.stats.timer = 0;
         pigThrowing.boxHasBeenPickedUp = false;
         Vector3 direction = pigThrowing.player.position - pigThrowing.transform.position;
@@ -31,11 +32,11 @@ public class PigThrowingBoxAttackState : PigThrowingBoxBaseState
         base.LogicUpdate();
         pigThrowing.stats.timer += Time.deltaTime;
 
-        if (pigThrowing.stats.numberOfBoxesLeft > 0) {
+        if (pigThrowing.numberOfBoxesLeft > 0) {
             pigThrowing.InstantiateBox();
-            pigThrowing.stats.numberOfBoxesLeft--;
-        } else if (pigThrowing.stats.numberOfBoxesLeft <= 0 && pigThrowing.CheckForPlayer()) {
-            pigThrowing.SwitchState(pigThrowing.findingBoxState);
+            pigThrowing.numberOfBoxesLeft--;
+        } else if (pigThrowing.numberOfBoxesLeft <= 0 && pigThrowing.CheckForPlayer()) {
+            pigThrowing.SwitchState(pigThrowing.playerDetectedState);
         } else if (!pigThrowing.CheckForPlayer()) {
             pigThrowing.SwitchState(pigThrowing.holdingBoxIdleState);
         }

@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "PigThrowingBoxStatsSO")]
-public class PigThrowingBoxStatsSO : ScriptableObject
+[CreateAssetMenu(menuName = "PigThrowingBombStatsSO")]
+public class PigThrowingBombStatsSO : ScriptableObject
 {
     [Header("Prefabs")]
     public GameObject deathParticle;

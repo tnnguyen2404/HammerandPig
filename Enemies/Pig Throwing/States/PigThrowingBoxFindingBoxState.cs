@@ -42,17 +42,16 @@ public class PigThrowingBoxFindingBoxState : PigThrowingBoxBaseState
         }
 
         pigThrowing.goal = closestBox.transform;
+        Vector2 direction = pigThrowing.goal.position - pigThrowing.transform.position;
+        if (direction.x > 0 && !pigThrowing.isFacingRight || direction.x < 0 && pigThrowing.isFacingRight) {
+            pigThrowing.Flip();
+        }
 
         if (Vector2.Distance(pigThrowing.goal.position, pigThrowing.agent.transform.position) > 0.5f && (pigThrowing.agent.IsIdle || pigThrowing.goal.hasChanged))
             {
                 pigThrowing.goal.hasChanged = false;
                 pigThrowing.agent.UpdatePath(pigThrowing.goal.position);
             }
-
-        pigThrowing.agent.OnStartLinkTraversal += pigThrowing.Agent_StartLinkTraversalEvent;
-        pigThrowing.agent.OnStartSegmentTraversal += pigThrowing.Agent_OnStartSegmentTraversal;
-        pigThrowing.agent.OnLinkTraversal += pigThrowing.Agent_OnLinkTraversal;
-        pigThrowing.agent.OnSegmentTraversal += pigThrowing.Agent_OnSegmentTraversal;
 
         if (Vector2.Distance(pigThrowing.transform.position, closestBox.transform.position) <= pigThrowing.stats.pickingUpBoxRange)
         {

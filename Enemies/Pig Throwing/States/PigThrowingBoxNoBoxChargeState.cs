@@ -12,13 +12,16 @@ public class PigThrowingBoxNoBoxChargeState : PigThrowingBoxBaseState
     public override void Enter()
     {
         base.Enter();
-        Debug.Log(animName);
+        pigThrowing.target = pigThrowing.player.transform;
+        Vector2 direction = pigThrowing.target.position - pigThrowing.transform.position;
+        if (direction.x > 0 && !pigThrowing.isFacingRight || direction.x < 0 && pigThrowing.isFacingRight) {
+            pigThrowing.Flip();
+        }
     }
 
     public override void LogicUpdate()
     {
         base.LogicUpdate();
-        pigThrowing.target = pigThrowing.player.transform;
         
         if (pigThrowing.target == null)
             return;
@@ -43,10 +46,6 @@ public class PigThrowingBoxNoBoxChargeState : PigThrowingBoxBaseState
     public override void PhysicsUpdate()
     {
         base.PhysicsUpdate();
-        pigThrowing.agent.OnStartLinkTraversal += pigThrowing.Agent_StartLinkTraversalEvent;
-        pigThrowing.agent.OnStartSegmentTraversal += pigThrowing.Agent_OnStartSegmentTraversal;
-        pigThrowing.agent.OnLinkTraversal += pigThrowing.Agent_OnLinkTraversal;
-        pigThrowing.agent.OnSegmentTraversal += pigThrowing.Agent_OnSegmentTraversal;
     }
 
     public override void Exit()

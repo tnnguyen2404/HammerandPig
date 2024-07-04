@@ -12,7 +12,7 @@ public class PigThrowingBoxPickingUpBoxState : PigThrowingBoxBaseState
     public override void Enter()
     {
         base.Enter();
-        pigThrowing.stats.numberOfBoxesLeft++;
+        pigThrowing.numberOfBoxesLeft++;
         pigThrowing.boxHasBeenPickedUp = true;
     }
 
