@@ -82,11 +82,9 @@ public class PigThrowingBombController : MonoBehaviour
     void Start() {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        agent = GetComponent<NavAgent>();
         startPos = transform.position;
         stats.curHealth = stats.maxHealth;
     }
-
     void Update() {
         currentState.LogicUpdate();
     }
@@ -162,13 +160,10 @@ public class PigThrowingBombController : MonoBehaviour
         GameObject pooledBomb = BombObjectPooling.SharedInstance.GetPooledObject();
         if (pooledBomb != null) {
             pooledBomb.SetActive(true);
-            BombProjectile bomb = pooledBomb.GetComponent<BombProjectile>();
-            bomb.transform.position = holdSpot.position;
-            bomb.transform.rotation = holdSpot.rotation;
+            BombProjectile bomb = pooledBomb.GetComponent<BombProjectile>();  
+            pooledBomb.transform.position = holdSpot.position;   
             bomb.InitializeProjectile(target, stats.boxSpeed, holdSpot);
-        } else {
-            Debug.LogWarning("No boxes available in the pool.");
-        }
+        } 
     }
 
     public void InstantiateItemDrop(GameObject prefab, float torque, float dropForce) {
@@ -187,7 +182,7 @@ public class PigThrowingBombController : MonoBehaviour
         Gizmos.DrawWireSphere(attackHitBoxPos.position, stats.meleeAttackRadius);
     }
 
-    public void Agent_StartLinkTraversalEvent(NavAgent agent)
+    private void Agent_StartLinkTraversalEvent(NavAgent agent)
     {
         string linkType = agent.CurrentPathSegment.link.LinkTypeName;
         bool unknownLinkType = linkType != "jump" && linkType != "fall";
@@ -223,7 +218,7 @@ public class PigThrowingBombController : MonoBehaviour
         timeToCompleteLink = deltaDistance / speed;
     }
 
-    public void Agent_OnLinkTraversal(NavAgent agent)
+    private void Agent_OnLinkTraversal(NavAgent agent)
     {
         if (!handleLinkMovement)
         {
@@ -254,12 +249,12 @@ public class PigThrowingBombController : MonoBehaviour
         }
     }
 
-    public void Agent_OnStartSegmentTraversal(NavAgent agent)
+    private void Agent_OnStartSegmentTraversal(NavAgent agent)
     {
 
     }
 
-    public void Agent_OnSegmentTraversal(NavAgent agent)
+    private void Agent_OnSegmentTraversal(NavAgent agent)
     {
         Vector2 newPos;
         bool reachedGoal = MoveAlongSegment(agent.Position, agent.PathSubGoal, agent.CurrentPathSegment.Point, agent.CurrentPathSegment.Tangent, Time.deltaTime * stats.runSpeed, out newPos);

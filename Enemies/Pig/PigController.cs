@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 using Random = UnityEngine.Random;
+using PathBerserker2d;
 
 public class PigController : MonoBehaviour
 {
@@ -23,13 +24,26 @@ public class PigController : MonoBehaviour
     public Transform groundCheck, wallCheck;
     public Transform attackHitBoxPos;
     public Transform player;
+    public Transform target;
     public GameObject alert;
     public PigStatsSO stats;
+    public NavAgent agent;
     public int facingDirection = 1;
     public Vector2 startPos;
     public Vector2 curPos;
+    [SerializeField] private UnityEngine.Vector3 offSet;
     public float curHealth;
     public int playerFacingDirection;
+    public int state = 0;
+    public int numberOfBoxesLeft = 0;
+    public float deltaDistance;
+    public bool handleLinkMovement;
+    public int minNumberOfLinkExecutions;
+    public Vector2 storedLinkStart;
+    public Vector2 direction;
+    public Transform goal = null;
+    public float timeOnLink;
+    public float timeToCompleteLink;
     
     [Header("Boolean")]
     public bool isGrounded;
@@ -64,6 +78,7 @@ public class PigController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        agent = GetComponent<NavAgent>();
         startPos = transform.position;
         curHealth = stats.maxHealth;
     }
@@ -74,9 +89,16 @@ public class PigController : MonoBehaviour
 
     void FixedUpdate() {
         currentState.PhysicsUpdate();
+        agent.OnStartLinkTraversal += Agent_StartLinkTraversalEvent;
+        agent.OnStartSegmentTraversal += Agent_OnStartSegmentTraversal;
+        agent.OnLinkTraversal += Agent_OnLinkTraversal;
+        agent.OnSegmentTraversal += Agent_OnSegmentTraversal;
     }
     public bool CheckForPlayer() {
-        playerDetected = Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, stats.playerDetectDistance, whatIsPlayer);
+        Vector2 dirToPlayer = (player.position - transform.position).normalized;
+        float angleToPlayer = Vector2.Angle(isFacingRight ? transform.right : -transform.right, dirToPlayer);
+        float disToPlayer = Vector2.Distance(player.position, transform.position);
+        playerDetected = disToPlayer <= stats.playerDetectDistance && angleToPlayer <= stats.detectionAngle / 2;
         return playerDetected;
     }
 
@@ -132,10 +154,164 @@ public class PigController : MonoBehaviour
         itemRb.AddTorque(torque, ForceMode2D.Impulse);
     }
 
+    public void Agent_StartLinkTraversalEvent(NavAgent agent)
+    {
+        string linkType = agent.CurrentPathSegment.link.LinkTypeName;
+        bool unknownLinkType = linkType != "jump" && linkType != "fall";
+
+        handleLinkMovement = linkType == "jump" || linkType == "fall";
+
+        if (!handleLinkMovement)
+            return;
+
+        timeOnLink = 0;
+        Vector2 delta = agent.PathSubGoal - agent.CurrentPathSegment.LinkStart;
+        deltaDistance = delta.magnitude;
+        direction = delta / deltaDistance;
+        minNumberOfLinkExecutions = 1;
+        storedLinkStart = agent.CurrentPathSegment.LinkStart;
+
+        if (direction.x > 0 && !isFacingRight || direction.x < 0 && isFacingRight) {
+            Flip();
+        }
+
+        float speed = 1;
+
+        switch (agent.CurrentPathSegment.link.LinkTypeName)
+        {
+            case "fall":
+                speed = stats.fallSpeed;
+                break;
+            case "jump":
+                speed = stats.jumpSpeed;
+                break;
+        }
+
+        timeToCompleteLink = deltaDistance / speed;
+    }
+
+    public void Agent_OnLinkTraversal(NavAgent agent)
+    {
+        if (!handleLinkMovement)
+        {
+            return;
+        }
+
+        timeOnLink += Time.deltaTime;
+        timeOnLink = Mathf.Min(timeToCompleteLink, timeOnLink);
+
+        switch (agent.CurrentPathSegment.link.LinkTypeName)
+        {
+            case "jump":
+                Jump(agent);
+                break;
+            case "fall":
+                Fall(agent);
+                break;
+            default:
+                Jump(agent);
+                break;
+        }
+        minNumberOfLinkExecutions--;
+
+        if (timeOnLink >= timeToCompleteLink && minNumberOfLinkExecutions <= 0)
+        {
+            agent.CompleteLinkTraversal();
+            return;
+        }
+    }
+
+    public void Agent_OnStartSegmentTraversal(NavAgent agent)
+    {
+
+    }
+
+    public void Agent_OnSegmentTraversal(NavAgent agent)
+    {
+        Vector2 newPos;
+        bool reachedGoal = MoveAlongSegment(agent.Position, agent.PathSubGoal, agent.CurrentPathSegment.Point, agent.CurrentPathSegment.Tangent, Time.deltaTime * stats.chargeSpeed, out newPos);
+        agent.Position = newPos;
+
+        if (reachedGoal)
+        {
+            agent.CompleteSegmentTraversal();
+        }
+    }
+
+    private void Jump(NavAgent agent)
+    {
+        Vector2 newPos = storedLinkStart + direction * timeOnLink * stats.jumpSpeed;
+        newPos.y += deltaDistance * 0.3f * Mathf.Sin(Mathf.PI * timeOnLink / timeToCompleteLink);
+        agent.Position = newPos;
+    }
+
+    private void Fall(NavAgent agent)
+    {
+        Vector2 newPos = storedLinkStart + direction * timeOnLink * stats.fallSpeed;
+        agent.Position = newPos;
+    }
+
+    private static bool MoveAlongSegment(Vector2 pos, Vector2 goal, Vector2 segPoint, Vector2 segTangent, float amount, out Vector2 newPos)
+    {
+        pos = Geometry.ProjectPointOnLine(pos, segPoint, segTangent);
+        goal = Geometry.ProjectPointOnLine(goal, segPoint, segTangent);
+        return MoveTo(pos, goal, amount, out newPos);
+    }
+
+    private static bool MoveTo(Vector2 pos, Vector2 goal, float amount, out Vector2 newPos)
+    {
+        Vector2 dir = goal - pos;
+        float distance = dir.magnitude;
+        if (distance <= amount)
+        {
+            newPos = goal;
+            return true;
+        }
+
+        newPos = pos + dir * amount / distance;
+        return false;
+    }
+
+    public Vector2 GetTargetPosition() {
+        Vector2 tpos = target.position;
+
+        if (stats.targetPredictionTime > 0)
+        {
+            IVelocityProvider velocityProvider = target.GetComponent<IVelocityProvider>();
+            if (velocityProvider != null)
+                return tpos + velocityProvider.WorldVelocity * stats.targetPredictionTime;
+
+            Rigidbody2D rigidbody = target.GetComponent<Rigidbody2D>();
+            if (rigidbody != null)
+                return tpos + rigidbody.velocity * stats.targetPredictionTime;
+        }
+            return tpos;
+    }
+
+    public void Flip()
+    {
+        UnityEngine.Vector3 theScale = transform.localScale;
+        theScale.x *= -1;
+        transform.localScale = theScale;
+        facingDirection *= -1;
+        isFacingRight = !isFacingRight;
+    }
+
     void OnDrawGizmos() {
-        Gizmos.DrawRay(wallCheck.position, (isFacingRight ? Vector2.right : Vector2.left) * 4);
         Gizmos.DrawLine(groundCheck.position, new Vector2(groundCheck.position.x, groundCheck.position.y - 0.14f));
         Gizmos.DrawWireSphere(attackHitBoxPos.position, stats.attackRadius);
+        UnityEngine.Vector3 forward = -transform.right;
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position + offSet, stats.detectionRadius);
+        Gizmos.color = Color.blue;
+    
+        int segments = 20; // Number of segments to draw the cone
+        for (int i = 0; i <= segments; i++)
+        {
+            float angle = -stats.detectionAngle / 2 + stats.detectionAngle * (i / (float)segments);
+            UnityEngine.Vector3 segment = UnityEngine.Quaternion.Euler(0, 0, angle) * forward * stats.detectionRadius;
+            Gizmos.DrawLine(transform.position + offSet, transform.position + offSet + segment);
+        }
     }
     #endregion
 }

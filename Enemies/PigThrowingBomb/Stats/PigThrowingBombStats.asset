@@ -17,21 +17,21 @@ MonoBehaviour:
   dropForce: 0
   torque: 0
   maxHealth: 5
-  curHealth: 0
+  curHealth: 5
   jumpSpeed: 0.01
   fallSpeed: 0.01
   groundCheckDistance: 0.15
   wallCheckDistance: 3
-  attackRange: 3
-  boxSpeed: 8
-  timer: 0
+  attackRange: 4
+  boxSpeed: 5
+  timer: 0.006255
   chargeSpeed: 0
   chargeTime: 0
   chargeDuration: 3
   closeEnoughRadius: 0
   travelStopRadius: 1
   targetPredictionTime: 0
-  playerDetectDistance: 4
+  playerDetectDistance: 6
   playerDetectedWaitTime: 1
   detectionPauseTime: 1
   pickingUpBoxWaitTime: 2
@@ -50,5 +50,5 @@ MonoBehaviour:
   meleeAttackRadius: 0.3
   meleeAttackDamage: 1
   attackDetails:
-  - 0
-  - 0
+  - 1
+  - -1.5159332

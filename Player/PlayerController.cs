@@ -184,9 +184,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void GainHeart() {
+    private void GainSmallHeart() {
         if (curHealth < maxHealth) {
             curHealth++;
+            UpdateHeartsUI();
+        }
+    }
+
+    private void GainBigHeart() {
+        if (curHealth < maxHealth) {
+            curHealth += 2;
             UpdateHeartsUI();
         }
     }
@@ -202,12 +209,11 @@ public class PlayerController : MonoBehaviour
     }
 
     void OnCollisionEnter2D(Collision2D other) {
-        if (other.gameObject.CompareTag("SmallHeart")) {
-            GainHeart();
+        if (other.gameObject.CompareTag("Heart")) {
+            GainSmallHeart();
             Destroy(other.gameObject);
         } else if (other.gameObject.CompareTag("BigHeart")) {
-            GainHeart();
-            GainHeart();
+            GainBigHeart();
             Destroy(other.gameObject);
         }
     }

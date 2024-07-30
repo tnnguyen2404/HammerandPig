@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -16,20 +17,25 @@ public class BombProjectile : MonoBehaviour
     private float damage = 2f;
     private float []attackDetails = new float [2];
     private bool isExploded = false;
-    [SerializeField] public float explodeRadius;
-    [SerializeField] public float xOffset, yOffset;
+    [SerializeField] private float explodeRadius;
+    [SerializeField] private float xOffset, yOffset;
+    [SerializeField] private float launchAngle;
     void Start() {
         rb = GetComponent<Rigidbody2D>();  
         anim = GetComponent<Animator>();
-        anim.SetBool("Bomb On", true);
+        anim.SetBool("Bomb On", true); 
+        Vector3 targetPosition = target.position;
+        Vector3 projectilePosition = transform.position;
+        float gravity = Physics2D.gravity.y;
+        float distance = Vector3.Distance(targetPosition, projectilePosition);
+        float angle = launchAngle * Mathf.Deg2Rad;
+        float velocity = Mathf.Sqrt(distance * Mathf.Abs(gravity) / Mathf.Sin(2 * angle));
+        Vector2 direction = (targetPosition - projectilePosition).normalized;
+        rb.velocity = new Vector2(direction.x * velocity * Mathf.Cos(angle), direction.y * velocity * speed * Mathf.Sin(angle));
     }
-
     void Update() {
-        Vector3 direction = (target.position - throwPos.position).normalized;
-        transform.position += direction * speed * Time.deltaTime;
         anim.SetBool("Hit", isExploded);
     }
-
     void OnCollisionEnter2D(Collision2D collision) {
         if (collision.transform.CompareTag("Player")) {
             isExploded = true;
@@ -43,7 +49,7 @@ public class BombProjectile : MonoBehaviour
 
     IEnumerator DestroyThisGameObjAfterHitAnim(float delay) {
         yield return new WaitForSeconds(delay);
-        this.gameObject.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     void AttackHitBox() {
@@ -55,7 +61,6 @@ public class BombProjectile : MonoBehaviour
             collider.transform.SendMessage("TakeDamage", attackDetails);
         }
     }
-
     public void InitializeProjectile(Transform target, float speed, Transform holdSpot) {
         this.target = target;
         this.speed = speed;  

@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 5034473110912138976, guid: 3681a16eb1eb5d04cacaa330f548ded2, type: 3}
   dropForce: 10
   torque: 3
-  maxHealth: 100
+  maxHealth: 3
   groundCheckDistance: 0.14
   wallCheckDistance: 3
   moveSpeed: 1.5
@@ -28,13 +28,15 @@ MonoBehaviour:
   attackRadius: 0.3
   attackDetails:
   - 1
-  - 2.8965623
+  - -1.2793475
   jumpForce: 7
   chargeSpeed: 1.5
-  chargeTime: 0.0043443
+  chargeTime: 1.807791
   chargeDuration: 3
-  playerDetectDistance: 4
+  playerDetectDistance: 3
   playerDetectedWaitTime: 0.5
   detectionPauseTime: 1
+  detectionRadius: 3
+  detectionAngle: 60
   knockBackSpeedX: 2
   knockBackSpeedY: 2

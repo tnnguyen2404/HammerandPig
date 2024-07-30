@@ -15,6 +15,8 @@ public class PigStatsSO : ScriptableObject
 
     [Header("General Stats")]
     public float maxHealth;
+    public float jumpSpeed;
+    public float fallSpeed;
 
     [Header("Patrol State")]
     public float groundCheckDistance;
@@ -34,12 +36,19 @@ public class PigStatsSO : ScriptableObject
     public float chargeSpeed;
     public float chargeTime;
     public float chargeDuration;
+    public float closeEnoughRadius;
+    public float travelStopRadius;
+    public float targetPredictionTime;
 
     [Header("Player Detection State")]
     public float playerDetectDistance;
     public float playerDetectedWaitTime;
     public float detectionPauseTime;  
+    public float detectionRadius;
+    public float detectionAngle;
 
     [Header("GetHit State")]
     public float knockBackSpeedX, knockBackSpeedY;
+
+    
 }

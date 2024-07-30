@@ -38,7 +38,7 @@ public class PigGetHitState : PigBaseState
     public override void AnimaitonFinishedTrigger()
     {
         base.AnimaitonFinishedTrigger();
-        pig.SwitchState(pig.chargeState);
+        pig.SwitchState(pig.detectPlayerState);
     }
 
     private void KnockBack() {

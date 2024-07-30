@@ -12,23 +12,29 @@ public class PigChargeState : PigBaseState
     public override void Enter() {
         base.Enter();
         pig.stats.chargeTime = 0f;
+        pig.target = pig.player.transform;
     }
 
     public override void LogicUpdate() {
         base.LogicUpdate();
-            Charge();
+        if (pig.target == null)
+            return;
 
-            if (pig.CheckForAttackRange()) {
-                pig.SwitchState(pig.attackState);
-            }
+        Vector2 targetPos = pig.GetTargetPosition();
+        float distToTarget = Vector2.Distance(pig.transform.position, targetPos);
 
-            if (pig.stats.chargeTime >= pig.stats.chargeDuration || !pig.CheckForPlayer()) {
-                ReturnToOriginalPos();
-                if (Vector2.Distance(pig.transform.position, pig.startPos) < 0.1f) {
-                    pig.SwitchState(pig.idleState);
-                    FlipSprite();
-                }
+        if (distToTarget > pig.stats.attackRange && 
+            !(pig.agent.PathGoal.HasValue &&  Vector2.Distance(pig.agent.PathGoal.Value, targetPos) <= pig.stats.travelStopRadius))
+        {
+            if (!pig.agent.UpdatePath(targetPos) && pig.stats.targetPredictionTime > 0)
+            {
+                pig.agent.UpdatePath(pig.target.position);
             }
+        } else if (distToTarget <= pig.stats.attackRange)
+        {
+            pig.agent.Stop();
+            pig.SwitchState(pig.attackState);
+        }    
     }
 
     public override void PhysicsUpdate() {
@@ -37,11 +43,6 @@ public class PigChargeState : PigBaseState
 
     public override void Exit() {
         base.Exit();
-    }
-
-    void Charge() {
-        pig.rb.velocity = new Vector2(pig.stats.chargeSpeed * pig.facingDirection, pig.rb.velocity.y);
-        pig.stats.chargeTime += Time.deltaTime;
     }
 
     void ReturnToOriginalPos() {
