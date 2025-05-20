@@ -27,9 +27,9 @@ public class PigThrowingBoxController : MonoBehaviour
     public PigThrowingBoxNoBoxChargeState noBoxChargeState;
     public PigThrowingBoxMeleeAttackState meleeAttackState;
     public GameObject alert;
+    public NavAgent agent;
     public Transform player;
     public Transform target;
-    public NavAgent agent;
     public Transform holdSpot;
     public Transform attackHitBoxPos;
     public GameObject box;
@@ -81,10 +81,25 @@ public class PigThrowingBoxController : MonoBehaviour
         currentState = idleState;
         currentState.Enter();
     }
+
+    void OnEnable() {
+        agent = GetComponent<NavAgent>();
+        agent.OnStartLinkTraversal += Agent_StartLinkTraversalEvent;
+        agent.OnStartSegmentTraversal += Agent_OnStartSegmentTraversal;
+        agent.OnLinkTraversal += Agent_OnLinkTraversal;
+        agent.OnSegmentTraversal += Agent_OnSegmentTraversal;
+    }
+
+    private void OnDisable() {
+        agent = GetComponent<NavAgent>();
+        agent.OnStartLinkTraversal -= Agent_StartLinkTraversalEvent;
+        agent.OnStartSegmentTraversal -= Agent_OnStartSegmentTraversal;
+        agent.OnLinkTraversal -= Agent_OnLinkTraversal;
+        agent.OnSegmentTraversal -= Agent_OnSegmentTraversal;
+    }
     void Start() {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        agent = GetComponent<NavAgent>();
         startPos = transform.position;
         stats.curHealth = stats.maxHealth;
     }

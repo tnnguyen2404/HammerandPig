@@ -20,6 +20,8 @@ MonoBehaviour:
   dropForce: 10
   torque: 3
   maxHealth: 3
+  jumpSpeed: 0.03
+  fallSpeed: 0.03
   groundCheckDistance: 0.14
   wallCheckDistance: 3
   moveSpeed: 1.5
@@ -28,11 +30,14 @@ MonoBehaviour:
   attackRadius: 0.3
   attackDetails:
   - 1
-  - -1.2793475
+  - 0.4364524
   jumpForce: 7
-  chargeSpeed: 1.5
-  chargeTime: 1.807791
+  chargeSpeed: 0.01
+  chargeTime: 0
   chargeDuration: 3
+  closeEnoughRadius: 0
+  travelStopRadius: 1
+  targetPredictionTime: 0
   playerDetectDistance: 3
   playerDetectedWaitTime: 0.5
   detectionPauseTime: 1
