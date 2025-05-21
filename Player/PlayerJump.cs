@@ -8,7 +8,6 @@ public class PlayerJump : MonoBehaviour
     [SerializeField] private float groundCheckRadius;
 
     private Rigidbody2D rb;
-    private Animator anim;
     
     public Transform groundCheck;
     public LayerMask whatIsGround;
@@ -16,7 +15,6 @@ public class PlayerJump : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
     }
 
     public bool IsGrounded()
@@ -26,6 +24,7 @@ public class PlayerJump : MonoBehaviour
 
     public void Jump()
     {
-        rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
+        if (IsGrounded())
+            rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
     }
 }

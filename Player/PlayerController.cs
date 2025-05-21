@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     public PlayerInputHandler InputHandler { get; private set; }
     public PlayerMovement Movement { get; private set; }
     public PlayerJump Jump { get; private set; }
+    public PlayerCombat Combat { get; private set; }
 
     public PlayerState idleState;
     public PlayerState runningState;
@@ -28,12 +29,14 @@ public class PlayerController : MonoBehaviour
         InputHandler = GetComponent<PlayerInputHandler>();
         Movement = GetComponent<PlayerMovement>();
         Jump = GetComponent<PlayerJump>();
+        Combat = GetComponent<PlayerCombat>();
         
         StateMachine = new PlayerStateMachine();
 
         idleState = new IdleState();
         runningState = new RunningState();
         jumpState = new JumpState();
+        attackingState = new AttackingState();
     }
 
     void Start()
@@ -45,6 +48,13 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         InputHandler.ReadInput();
+
+        if (InputHandler.isAttacking)
+        {
+            SwitchState(attackingState);
+            return;
+        }
+        
         StateMachine.Update(this);
     }
     

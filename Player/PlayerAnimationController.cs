@@ -9,6 +9,7 @@ public class PlayerAnimationController : MonoBehaviour
     private PlayerJump jump;
     
     private PlayerInputHandler inputHandler;
+    private PlayerCombat combat;
 
     void Awake()
     {
@@ -17,6 +18,7 @@ public class PlayerAnimationController : MonoBehaviour
         jump = GetComponent<PlayerJump>();
         
         inputHandler = GetComponent<PlayerInputHandler>();
+        combat = GetComponent<PlayerCombat>();
     }
 
     void Update()
@@ -24,5 +26,11 @@ public class PlayerAnimationController : MonoBehaviour
         anim.SetFloat("yVelocity", rb.velocity.y);
         anim.SetBool("isGrounded", jump.IsGrounded());
         anim.SetBool("isMoving", inputHandler.isMoving);
+
+        if (inputHandler.isAttacking && combat.attackTimer >= combat.attackCd)
+        {
+            anim.SetTrigger("Attack");
+            combat.attackTimer = 0;
+        }
     }
 }
