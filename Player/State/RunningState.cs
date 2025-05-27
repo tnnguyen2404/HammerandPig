@@ -24,4 +24,9 @@ public class RunningState : PlayerState
         if (controller.InputHandler.horizontalInput == 0) 
             controller.StateMachine.SwitchState(controller.idleState, controller);
     }
+
+    public override void FixedUpdateState(PlayerController controller)
+    {
+        
+    }
 }

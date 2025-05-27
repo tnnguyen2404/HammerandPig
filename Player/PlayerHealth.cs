@@ -6,6 +6,8 @@ public class PlayerHealth : MonoBehaviour
 {
     public GameObject[] hearts;
     public Animator[] heartAnim;
+
+    public bool isAttacked = false;
     
     private int maxHealth = 3;
     private int curHealth;
@@ -19,6 +21,7 @@ public class PlayerHealth : MonoBehaviour
     void TakeDamage(int damage)
     {
         curHealth -= damage;
+        isAttacked = true;
         UpdateHeartsUI();
     }
     

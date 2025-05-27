@@ -18,4 +18,9 @@ public class DeathState : PlayerState
     {
         
     }
+
+    public override void FixedUpdateState(PlayerController controller)
+    {
+        
+    }
 }

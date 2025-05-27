@@ -22,4 +22,9 @@ public class IdleState : PlayerState
         if (controller.InputHandler.jumpInput)
             controller.StateMachine.SwitchState(controller.jumpState, controller);
     }
+
+    public override void FixedUpdateState(PlayerController controller)
+    {
+        
+    }
 }

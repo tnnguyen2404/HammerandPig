@@ -20,4 +20,9 @@ public class JumpState : PlayerState
         if (Mathf.Abs(controller.rb.velocity.x) > 0.1f)
             controller.StateMachine.SwitchState(controller.idleState, controller);
     }
+
+    public override void FixedUpdateState(PlayerController controller)
+    {
+        
+    }
 }

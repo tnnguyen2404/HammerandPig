@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface IKnockBackable 
 {
-    void ApplyKnockBack(Vector2 direction, float force);
+    void ApplyKnockBack(Vector2 direction);
 }

@@ -10,6 +10,7 @@ public class PlayerAnimationController : MonoBehaviour
     
     private PlayerInputHandler inputHandler;
     private PlayerCombat combat;
+    private PlayerHealth health;
 
     void Awake()
     {
@@ -19,6 +20,7 @@ public class PlayerAnimationController : MonoBehaviour
         
         inputHandler = GetComponent<PlayerInputHandler>();
         combat = GetComponent<PlayerCombat>();
+        health = GetComponent<PlayerHealth>();
     }
 
     void Update()
@@ -31,6 +33,12 @@ public class PlayerAnimationController : MonoBehaviour
         {
             anim.SetTrigger("Attack");
             combat.attackTimer = 0;
+        }
+
+        if (health.isAttacked)
+        {
+            anim.SetTrigger("GetHit");
+            health.isAttacked = false;
         }
     }
 }

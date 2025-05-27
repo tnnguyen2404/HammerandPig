@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class DummyController : MonoBehaviour
 {
-    [SerializeField] private float maxHealth, knockBackSpeedX, knockBackSpeedY, knockBackDuration;
+    [SerializeField] private float knockBackDuration;
     [SerializeField] private float knockBackDeathSpeedX, knockBackDeathSpeedY, deathTorque;
-    [SerializeField] private bool applyKnockBack;
+    [SerializeField] private int maxHealth;
     [SerializeField] private GameObject hitParticle;
-    private float currentHealth, knockBackStart;
+    private float knockBackStart;
+    private int currentHealth;
     private int playerFacingDirection;
     private bool playerOnLeft, knockBack;
     private PlayerController pm;
@@ -16,7 +17,8 @@ public class DummyController : MonoBehaviour
     private Rigidbody2D rbAlive, rbBrokenTop, rbBrokenBottom;
     private Animator anim;
 
-    private void Start() {
+    private void Start()
+    {
         currentHealth = maxHealth;
         pm = GameObject.Find("Player").GetComponent<PlayerController>();
 
@@ -34,12 +36,9 @@ public class DummyController : MonoBehaviour
         brokenTopGO.SetActive(false);
     }
 
-    private void Update() {
-        CheckKnockBack();
-    }
-
-    private void TakeDamage(float[] attackDetails) {
-        currentHealth -= attackDetails[0];
+    private void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
         playerFacingDirection = pm.GetFacingDirection();
         
         Instantiate(hitParticle, aliveGO.transform.position, Quaternion.Euler(0.0f, 0.0f, Random.Range(0.0f, 360.0f)));
@@ -53,27 +52,18 @@ public class DummyController : MonoBehaviour
         anim.SetBool("PlayerOnLeft",playerOnLeft);
         anim.SetTrigger("Damage");
 
-        if (applyKnockBack && currentHealth > 0.0f) {
-            KnockBack();
-        } else {
+        if (currentHealth < 0.0f) {
             Die();
-        }
+        } 
+    }
+    
+    private void ApplyKnockBack(Vector2 knockBackDirection)
+    {
+        rbAlive.velocity = knockBackDirection;
     }
 
-    private void KnockBack() {
-        knockBack = true;
-        knockBackStart = Time.time;
-        rbAlive.velocity = new Vector2 (knockBackSpeedX * playerFacingDirection, knockBackSpeedY);
-    }
-
-    private void CheckKnockBack() {
-        if (Time.time >= knockBackStart + knockBackDuration && knockBack) {
-            knockBack = false;
-            rbAlive.velocity = new Vector2 (0.0f, rbAlive.velocity.y);
-        }
-    }
-
-    private void Die() {
+    private void Die() 
+    {
         aliveGO.SetActive(false);
         brokenBottomGO.SetActive(true);
         brokenTopGO.SetActive(true);
@@ -81,7 +71,7 @@ public class DummyController : MonoBehaviour
         brokenBottomGO.transform.position = aliveGO.transform.position;
         brokenTopGO.transform.position = aliveGO.transform.position;
 
-        rbBrokenBottom.velocity = new Vector2(knockBackSpeedX * playerFacingDirection, knockBackSpeedY);
+        rbBrokenBottom.velocity = new Vector2(knockBackDeathSpeedX * playerFacingDirection, knockBackDeathSpeedY);
         rbBrokenTop.velocity = new Vector2(knockBackDeathSpeedX * playerFacingDirection, knockBackDeathSpeedY);
         rbBrokenTop.AddTorque(deathTorque * -playerFacingDirection, ForceMode2D.Impulse);
     }

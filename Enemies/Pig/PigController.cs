@@ -9,6 +9,7 @@ using PathBerserker2d;
 
 public class PigController : MonoBehaviour
 {
+    public EnemyTypeSO enemyType;
     public PlayerController playerController;
     public PigBaseState currentState;
     public PigIdleState idleState;

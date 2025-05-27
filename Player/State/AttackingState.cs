@@ -20,4 +20,9 @@ public class AttackingState : PlayerState
         if (Mathf.Abs(controller.InputHandler.horizontalInput) > 0)
             controller.StateMachine.SwitchState(controller.runningState, controller);
     }
+
+    public override void FixedUpdateState(PlayerController controller)
+    {
+        
+    }
 }

@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
-    public Transform AttackHitPosBox;
+    public Transform attackHitPosBox;
     public LayerMask whatIsDamageable;
+    
+    [SerializeField] private float knockBackSpeedX, knockBackSpeedY;
     
     public float attackTimer = 1.1f;
     public float attackCd = 1f;
@@ -20,15 +22,17 @@ public class PlayerCombat : MonoBehaviour
 
     public void AttackHitBox()
     {
-        Collider2D detectedObject = Physics2D.OverlapCircle(AttackHitPosBox.position, attackRadius, whatIsDamageable);
+        Collider2D detectedObject = Physics2D.OverlapCircle(attackHitPosBox.position, attackRadius, whatIsDamageable);
 
         if (detectedObject != null)
         {
             IDamageable damageable = detectedObject.GetComponent<IDamageable>();
             if (damageable != null)
                 damageable.TakeDamage(damage);
+            
+            IKnockBackable knockBackable = detectedObject.GetComponent<IKnockBackable>();
+            if (knockBackable != null)
+                knockBackable.ApplyKnockBack(new Vector2(knockBackSpeedX, knockBackSpeedY));
         }
-        
-        
     }
 }
