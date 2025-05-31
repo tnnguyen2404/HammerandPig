@@ -17,6 +17,11 @@ public class PlayerStateMachine
         currentState.UpdateState(controller);
     }
 
+    public void FixedUpdate(PlayerController controller)
+    {
+        currentState.FixedUpdateState(controller);
+    }
+
     public void SwitchState(PlayerState newState, PlayerController controller)
     {
         currentState.ExitState(controller);

@@ -13,7 +13,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         horizontalInput = Input.GetAxis("Horizontal");
         isMoving = Input.GetAxis("Horizontal") != 0;
-        jumpInput = Input.GetKey(KeyCode.Space);
+        jumpInput = Input.GetKeyDown(KeyCode.Space);
         isAttacking = Input.GetMouseButton(0);
     }
 }

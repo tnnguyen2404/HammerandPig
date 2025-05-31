@@ -12,11 +12,7 @@ public class EnemyTypeSO : ScriptableObject
 
     [Header("Stats")] 
     public int maxHealth;
-    public float moveSpeed;
     public float jumpForce;
-    public int damage;
-    public float attackRange;
-    public float attackRadius;
     
     [Header("Boolean")]
     public bool isGrounded;
@@ -29,9 +25,11 @@ public class EnemyTypeSO : ScriptableObject
     public bool isFacingRight;
     public bool playerDetected;
     public bool playerInAttackRange;
+    public bool isProcessing;
 
     [Header("Movement")] 
     public int facingDirection;
+    public float moveSpeed;
 
     [Header("SurroundingsCheck")] 
     public float groundCheckDistance;
@@ -50,4 +48,7 @@ public class EnemyTypeSO : ScriptableObject
     public Transform attackHitBox;
     public LayerMask whatIsDamageable;
     public float knockBackForceX, knockBackForceY;
+    public int damage;
+    public float attackRange;
+    public float attackRadius;
 }

@@ -18,9 +18,6 @@ public class IdleState : PlayerState
     {
         if (Mathf.Abs(controller.InputHandler.horizontalInput) > 0.1f)
             controller.StateMachine.SwitchState(controller.runningState, controller);
-        
-        if (controller.InputHandler.jumpInput)
-            controller.StateMachine.SwitchState(controller.jumpState, controller);
     }
 
     public override void FixedUpdateState(PlayerController controller)

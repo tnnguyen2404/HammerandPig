@@ -18,9 +18,6 @@ public class RunningState : PlayerState
     {
         controller.Movement.Move(controller.InputHandler.horizontalInput);
         
-        if (controller.InputHandler.jumpInput)
-            controller.StateMachine.SwitchState(controller.jumpState, controller);
-        
         if (controller.InputHandler.horizontalInput == 0) 
             controller.StateMachine.SwitchState(controller.idleState, controller);
     }

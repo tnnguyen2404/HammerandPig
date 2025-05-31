@@ -6,7 +6,6 @@ public class AttackingState : PlayerState
 {
     public override void EnterState(PlayerController controller)
     {
-        controller.rb.velocity = Vector2.zero;
         controller.Combat.AttackHitBox();
     }
 

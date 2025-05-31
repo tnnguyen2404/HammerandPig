@@ -54,8 +54,15 @@ public class PlayerController : MonoBehaviour
             SwitchState(attackingState);
             return;
         }
+
+        if (InputHandler.jumpInput)
+        {
+            SwitchState(jumpState);
+            return;
+        }
         
         StateMachine.Update(this);
+        StateMachine.FixedUpdate(this);
     }
     
     public void SwitchState(PlayerState newState)

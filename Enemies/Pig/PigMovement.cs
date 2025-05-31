@@ -4,13 +4,66 @@ using UnityEngine;
 
 public class PigMovement : MonoBehaviour
 {
+    public Transform player;
     private Rigidbody2D rb;
     private PigController controller;
+
+    private Find pathFinder;
+    private Queue<Action> currentPath = new Queue<Action>();
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
+        pathFinder = GetComponent<Find>();
+    }
+
+    void Update()
+    {
+        if (!controller.enemyType.isProcessing && 
+            Vector2.Distance(transform.position, player.position) <= controller.enemyType.detectRange)
+            StartCoroutine(FollowPath(player.position));
+    }
+
+    IEnumerator FollowPath(Vector2 target)
+    {
+        controller.enemyType.isProcessing = true;
+        
+        currentPath.Clear();
+        var actionList = pathFinder.Findd(transform.position, target);
+        if (actionList.Count == 0)
+        {
+            controller.enemyType.isProcessing = false;
+            yield break;
+        }
+
+        foreach (var action in actionList)
+        {
+            currentPath.Enqueue(action);
+        }
+
+        while (currentPath.Count > 0)
+        {
+            Action current = currentPath.Dequeue();
+
+            switch (current.SateAction)
+            {
+                case StateAction.move:
+                    yield return MoveToX(current.Tagert.x);
+                    break;
+            }
+        }
+    }
+
+    IEnumerator MoveToX(float targetX)
+    {
+        while (Mathf.Abs(transform.position.x - targetX) > 0.05f)
+        {
+            float direction = Mathf.Sign(targetX - transform.position.x);
+            rb.velocity = new Vector2(direction * controller.enemyType.moveSpeed, rb.velocity.y);
+            yield return null;
+        }
+        rb.velocity = new Vector2(0, rb.velocity.y);
     }
 
     bool WallCheck()
