@@ -4,30 +4,23 @@ using UnityEngine;
 
 public class PigIdleState : PigBaseState
 {
-    public PigIdleState(PigController pig, string animName) : base (pig, animName)
+    public override void EnterState(PigController controller)
     {
-       
-    }
-    public override void Enter()
-    {
-        base.Enter();
+        
     }
 
-    public override void LogicUpdate()
+    public override void UpdateState(PigController controller)
     {
-        base.LogicUpdate();
-        if (pig.CheckForPlayer()) {
-            pig.SwitchState(pig.detectPlayerState);
-        }
+        
     }
 
-    public override void PhysicsUpdate()
+    public override void ExitState(PigController controller)
     {
-        base.PhysicsUpdate();
+        
     }
 
-    public override void Exit()
+    public override void FixedUpdateState(PigController controller)
     {
-        base.Exit();
+        
     }
 }

@@ -4,47 +4,23 @@ using UnityEngine;
 
 public class PigAttackState : PigBaseState
 {
-    public PigAttackState(PigController pig, string animName) : base (pig, animName) 
+    public override void EnterState(PigController controller)
     {
-
+        
     }
 
-    public override void Enter()
+    public override void UpdateState(PigController controller)
     {
-        base.Enter();
+        
     }
 
-    public override void LogicUpdate()
+    public override void FixedUpdateState(PigController controller)
     {
-        base.LogicUpdate();
+        
     }
 
-    public override void PhysicsUpdate()
+    public override void ExitState(PigController controller)
     {
-        base.PhysicsUpdate();
+        
     }
-
-    public override void Exit()
-    {
-        base.Exit();
-    }
-
-    public override void AnimationAttackTrigger()
-    {
-        base.AnimationAttackTrigger();
-        Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(pig.attackHitBoxPos.position, pig.stats.attackRadius, pig.whatIsDamageable);
-        pig.stats.attackDetails[0] = pig.stats.attackDamage;
-        pig.stats.attackDetails[1] = pig.transform.position.x;
-
-        foreach (Collider2D collider in detectedObjects) {
-            collider.transform.SendMessage("TakeDamage", pig.stats.attackDetails);
-        }
-    }
-
-    public override void AnimaitonFinishedTrigger()
-    {
-        base.AnimaitonFinishedTrigger();
-        pig.SwitchState(pig.detectPlayerState);
-    }
-
 }

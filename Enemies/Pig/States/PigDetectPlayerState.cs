@@ -4,34 +4,23 @@ using UnityEngine;
 
 public class PigDetectPlayerState : PigBaseState
 {
-    public PigDetectPlayerState(PigController pig, string animName) : base (pig, animName)
+    public override void EnterState(PigController pigController)
     {
        
     }
 
-    public override void Enter()
+    public override void UpdateState(PigController pigController)
     {
-        base.Enter();
-        pig.alert.SetActive(true);
-    }
-
-    public override void LogicUpdate()
-    {
-        base.LogicUpdate();
-        if (Time.time >= pig.stateTime + pig.stats.playerDetectedWaitTime) {
-            pig.SwitchState(pig.chargeState);
-        }
         
     }
 
-    public override void PhysicsUpdate()
+    public override void FixedUpdateState(PigController pigController)
     {
-        base.PhysicsUpdate();
+        
     }
 
-    public override void Exit()
+    public override void ExitState(PigController pigController)
     {
-        pig.alert.SetActive(false);
-        base.Exit();
+        
     }
 }

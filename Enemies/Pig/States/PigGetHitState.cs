@@ -4,48 +4,23 @@ using UnityEngine;
 
 public class PigGetHitState : PigBaseState
 {
-    public PigGetHitState(PigController pig, string animName) : base (pig, animName)
+    public override void EnterState(PigController controller)
     {
-       
+        
     }
 
-    public override void Enter()
+    public override void UpdateState(PigController controller)
     {
-        base.Enter();
-        KnockBack();
+        
     }
 
-    public override void LogicUpdate()
+    public override void FixedUpdateState(PigController controller)
     {
-        base.LogicUpdate();
+        
     }
 
-    public override void PhysicsUpdate()
+    public override void ExitState(PigController controller)
     {
-        base.PhysicsUpdate();
-    }
-
-    public override void Exit()
-    {
-        base.Exit();
-    }
-
-    public override void AnimationAttackTrigger()
-    {
-        base.AnimationAttackTrigger();
-    }
-
-    public override void AnimaitonFinishedTrigger()
-    {
-        base.AnimaitonFinishedTrigger();
-        pig.SwitchState(pig.detectPlayerState);
-    }
-
-    private void KnockBack() {
-        pig.rb.velocity = new Vector2 (pig.stats.knockBackSpeedX * pig.playerFacingDirection, pig.stats.knockBackSpeedY);
-    }
-
-    private void Die() {
-        //Destroy(gameObject);
+        
     }
 }

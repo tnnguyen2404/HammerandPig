@@ -7,6 +7,7 @@ public class PigMovement : MonoBehaviour
     public Transform player;
     private Rigidbody2D rb;
     private PigController controller;
+    private PigJump jump;
 
     private Find pathFinder;
     private Queue<Action> currentPath = new Queue<Action>();
@@ -16,6 +17,7 @@ public class PigMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
         pathFinder = GetComponent<Find>();
+        jump = GetComponent<PigJump>();
     }
 
     void Update()
@@ -50,6 +52,13 @@ public class PigMovement : MonoBehaviour
             {
                 case StateAction.move:
                     yield return MoveToX(current.Tagert.x);
+                    break;
+                case StateAction.jump:
+                    jump.Jump();
+                    yield return new WaitUntil(() => jump.isGrounded());
+                    break;
+                case StateAction.fall:
+                    yield return new WaitUntil(() => Mathf.Abs(transform.position.y - target.y) < 0.1f);
                     break;
             }
         }

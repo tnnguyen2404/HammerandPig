@@ -13,7 +13,7 @@ public class PigJump : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private bool isGrounded()
+    public bool isGrounded()
     {
         return Physics.Raycast(controller.enemyType.groundCheck.position, Vector2.down,
             controller.enemyType.groundCheckDistance, controller.enemyType.groundLayer);
