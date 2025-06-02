@@ -21,5 +21,6 @@ public class PigHealth : MonoBehaviour
     void TakeDamage(int damage)
     {
         curHealth -= damage;
+        controller.enemyType.isAttacked = true;
     }
 }

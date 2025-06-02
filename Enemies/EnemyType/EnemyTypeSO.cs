@@ -9,6 +9,7 @@ public class EnemyTypeSO : ScriptableObject
     [Header("Basic Info")] 
     public string enemyName;
     public RuntimeAnimatorController animController;
+    public GameObject alert;
 
     [Header("Stats")] 
     public int maxHealth;
@@ -21,11 +22,10 @@ public class EnemyTypeSO : ScriptableObject
     public bool isJumping;
     public bool isAlive;
     public bool isAttacking;
-    public bool isCharging = false;
+    public bool isCharging;
     public bool isFacingRight;
-    public bool playerDetected;
-    public bool playerInAttackRange;
     public bool isProcessing;
+    public bool isAttacked;
 
     [Header("Movement")] 
     public int facingDirection;
@@ -42,7 +42,6 @@ public class EnemyTypeSO : ScriptableObject
     [Header("Player Detection State")]
     public float detectRange;
     public float detectionWaitTime;
-    public float detectionPauseTime;
 
     [Header("Attack State")] 
     public Transform attackHitBox;

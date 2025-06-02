@@ -15,33 +15,19 @@ public class PigController : MonoBehaviour
     
     public PigStateMachine StateMachine {get; private set;}
     
+    public PigMovement Movement {get; private set;}
+    public PigCombat Combat {get; private set;}
+    
     public PigBaseState idleState;
     public PigBaseState chargeState;
     public PigBaseState detectPlayerState;
     public PigBaseState attackState;
-    public PigBaseState getHitState;
     public PigBaseState deathState;
+
+    private Rigidbody2D rb;
+    private Animator anim;
     
-    public Rigidbody2D rb;
-    public Animator anim;
-    public LayerMask whatIsGround, whatIsPlayer, whatIsDamageable;
-    public Transform groundCheck, wallCheck;
-    public Transform attackHitBoxPos;
-    public Transform player;
-    public Transform target;
-    public GameObject alert;
-    public PigStatsSO stats;
-    public int facingDirection = 1;
-    public Vector2 startPos;
-    public Vector2 curPos;
     [SerializeField] private UnityEngine.Vector3 offSet;
-    public float curHealth;
-    public int playerFacingDirection;
-    public int numberOfBoxesLeft = 0;
-    
-    [Header("Boolean")]
-    public bool isFacingRight;
-    public bool playerInAttackRange;
 
     void Awake() 
     {
@@ -50,8 +36,10 @@ public class PigController : MonoBehaviour
         detectPlayerState = new PigDetectPlayerState();
         chargeState = new PigChargeState();
         attackState = new PigAttackState();
-        getHitState = new PigGetHitState();
         deathState = new PigDeathState();
+        
+        Movement = GetComponent<PigMovement>();
+        Combat = GetComponent<PigCombat>();
 
         StateMachine = new PigStateMachine();
     }
@@ -71,18 +59,20 @@ public class PigController : MonoBehaviour
         StateMachine.FixedUpdate(this);
     }
     
-    public bool CheckForAttackRange() {
-        playerInAttackRange = Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, stats.attackRange, whatIsPlayer);
-        return playerInAttackRange;
-    }
-
-    
     public void SwitchState(PigBaseState newState) {
         StateMachine.SwitchState(newState, this);
     }
 
-    public int GetFacingDirection() {
-        return facingDirection;
+    public bool DetectPlayer()
+    {
+        float distance = Vector2.Distance(transform.position, Movement.player.position);
+        return distance <= enemyType.detectRange;
+    }
+
+    public bool CheckForAttackRange()
+    {
+        float distance = Vector2.Distance(transform.position, Movement.player.position);
+        return distance <= enemyType.attackRange;
     }
 
     public void Instantiate(GameObject prefab, float torque, float dropForce) {

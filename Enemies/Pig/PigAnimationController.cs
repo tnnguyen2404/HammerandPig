@@ -20,5 +20,8 @@ public class PigAnimationController : MonoBehaviour
         anim.SetBool("Charge", controller.enemyType.isCharging);
         anim.SetBool("Attack", controller.enemyType.isAttacking);
         anim.SetBool("Death", controller.enemyType.isAlive);
+
+        if (controller.enemyType.isAttacked)
+            anim.SetTrigger("GetHit");
     }
 }

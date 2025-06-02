@@ -11,7 +11,7 @@ public class PigCombat : MonoBehaviour
         controller = GetComponent<PigController>();
     }
 
-    void AttackHitBox()
+    public void AttackHitBox()
     {
         Collider2D detectedObject = Physics2D.OverlapCircle(
             controller.enemyType.attackHitBox.position, controller.enemyType.attackRadius,

@@ -11,7 +11,8 @@ public class PigIdleState : PigBaseState
 
     public override void UpdateState(PigController controller)
     {
-        
+        if(controller.DetectPlayer())
+            controller.SwitchState(controller.detectPlayerState);
     }
 
     public override void ExitState(PigController controller)

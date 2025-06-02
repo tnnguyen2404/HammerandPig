@@ -11,6 +11,7 @@ public class PigMovement : MonoBehaviour
 
     private Find pathFinder;
     private Queue<Action> currentPath = new Queue<Action>();
+    private Coroutine pathCoroutine;
 
     void Awake()
     {
@@ -20,14 +21,16 @@ public class PigMovement : MonoBehaviour
         jump = GetComponent<PigJump>();
     }
 
-    void Update()
+    public Coroutine FollowPath(Vector2 target)
     {
-        if (!controller.enemyType.isProcessing && 
-            Vector2.Distance(transform.position, player.position) <= controller.enemyType.detectRange)
-            StartCoroutine(FollowPath(player.position));
+        if (pathCoroutine != null)
+            StopCoroutine(pathCoroutine);
+        
+        pathCoroutine = StartCoroutine(FollowPathCoroutine(target));
+        return pathCoroutine;
     }
 
-    IEnumerator FollowPath(Vector2 target)
+    IEnumerator FollowPathCoroutine(Vector2 target)
     {
         controller.enemyType.isProcessing = true;
         
@@ -82,9 +85,12 @@ public class PigMovement : MonoBehaviour
             controller.enemyType.wallCheckDistance, controller.enemyType.wallLayer);
     }
 
-    public void Move()
+    public void StopMoving()
     {
-        rb.velocity = new Vector2(rb.velocity.x * controller.enemyType.moveSpeed, rb.velocity.y);
+        if (pathCoroutine != null)
+            StopCoroutine(pathCoroutine);
+        
+        rb.velocity = Vector2.zero;
     }
 
     public void FlipSprite()

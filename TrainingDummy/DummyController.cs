@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DummyController : MonoBehaviour
+public class DummyController : MonoBehaviour, IDamageable
 {
     [SerializeField] private float knockBackDuration;
     [SerializeField] private float knockBackDeathSpeedX, knockBackDeathSpeedY, deathTorque;
     [SerializeField] private int maxHealth;
     [SerializeField] private GameObject hitParticle;
     private float knockBackStart;
-    private int currentHealth;
+    public int currentHealth;
     private int playerFacingDirection;
     private bool playerOnLeft, knockBack;
     private PlayerController pm;
@@ -20,7 +20,7 @@ public class DummyController : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
-        pm = GameObject.Find("Player").GetComponent<PlayerController>();
+        pm = GetComponent<PlayerController>();
 
         aliveGO = transform.Find("Alive").gameObject;
         brokenBottomGO = transform.Find("BrokenBottom").gameObject;
@@ -36,8 +36,9 @@ public class DummyController : MonoBehaviour
         brokenTopGO.SetActive(false);
     }
 
-    private void TakeDamage(int damage)
+    public void TakeDamage(int damage)
     {
+        Debug.Log("Dummy took damage: " + damage);
         currentHealth -= damage;
         playerFacingDirection = pm.GetFacingDirection();
         
