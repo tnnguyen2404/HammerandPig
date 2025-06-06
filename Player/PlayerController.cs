@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     public PlayerMovement Movement { get; private set; }
     public PlayerJump Jump { get; private set; }
     public PlayerCombat Combat { get; private set; }
+    public PlayerAnimationController AnimationController { get; private set; }
 
     public PlayerState idleState;
     public PlayerState runningState;
@@ -20,9 +21,6 @@ public class PlayerController : MonoBehaviour
     public PlayerStateMachine StateMachine { get; private set; }
     
     public Rigidbody2D rb;
-    public Animator anim;
-    
-    public int facingDirection;
 
     void Awake()
     {
@@ -30,6 +28,7 @@ public class PlayerController : MonoBehaviour
         Movement = GetComponent<PlayerMovement>();
         Jump = GetComponent<PlayerJump>();
         Combat = GetComponent<PlayerCombat>();
+        AnimationController = GetComponent<PlayerAnimationController>();
         
         StateMachine = new PlayerStateMachine();
 
@@ -70,7 +69,4 @@ public class PlayerController : MonoBehaviour
         StateMachine.SwitchState(newState, this);
     }
     
-    public int GetFacingDirection() {
-        return facingDirection;
-    }
 }

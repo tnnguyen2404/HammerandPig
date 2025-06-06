@@ -156,7 +156,7 @@ public class PigThrowingBoxController : MonoBehaviour
 
     private void TakeDamage(float[] attackDetails) {
         stats.curHealth -= attackDetails[0];
-        playerFacingDirection = playerController.GetFacingDirection();
+        //playerFacingDirection = playerController.GetFacingDirection();
         if (stats.curHealth > 0.1f && applyKnockBack) {
             SwitchState(getHitState);
         } else {

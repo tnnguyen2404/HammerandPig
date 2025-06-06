@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     private Rigidbody2D rb;
-    private int facingDirection = 1;
+    public int facingDirection = 1;
     private bool isFacingRight = true;
     [SerializeField] private float moveSpeed;
 
@@ -30,7 +30,4 @@ public class PlayerMovement : MonoBehaviour
         transform.Rotate(0, 180f, 0);
     }
     
-    public int GetFacingDirection() {
-        return facingDirection;
-    }
 }

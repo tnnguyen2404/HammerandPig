@@ -12,6 +12,8 @@ public class PigMovement : MonoBehaviour
     private Find pathFinder;
     private Queue<Action> currentPath = new Queue<Action>();
     private Coroutine pathCoroutine;
+    
+    public bool isCharging;
 
     void Awake()
     {
@@ -21,24 +23,17 @@ public class PigMovement : MonoBehaviour
         jump = GetComponent<PigJump>();
     }
 
-    public Coroutine FollowPath(Vector2 target)
+    public void FollowPath(Vector2 target)
     {
-        if (pathCoroutine != null)
-            StopCoroutine(pathCoroutine);
-        
-        pathCoroutine = StartCoroutine(FollowPathCoroutine(target));
-        return pathCoroutine;
+        StartCoroutine(FollowPathCoroutine(target));
     }
 
     IEnumerator FollowPathCoroutine(Vector2 target)
     {
-        controller.enemyType.isProcessing = true;
-        
         currentPath.Clear();
         var actionList = pathFinder.Findd(transform.position, target);
         if (actionList.Count == 0)
         {
-            controller.enemyType.isProcessing = false;
             yield break;
         }
 
@@ -54,42 +49,33 @@ public class PigMovement : MonoBehaviour
             switch (current.SateAction)
             {
                 case StateAction.move:
-                    yield return MoveToX(current.Tagert.x);
+                    yield return MoveToX(current.Tagert);
                     break;
                 case StateAction.jump:
                     jump.Jump();
-                    yield return new WaitUntil(() => jump.isGrounded());
+                    yield return new WaitForSeconds(1f);
                     break;
                 case StateAction.fall:
-                    yield return new WaitUntil(() => Mathf.Abs(transform.position.y - target.y) < 0.1f);
+                    yield return new WaitUntil(() => jump.CheckForGround());
                     break;
             }
         }
     }
 
-    IEnumerator MoveToX(float targetX)
+    IEnumerator MoveToX(Vector2 target)
     {
-        while (Mathf.Abs(transform.position.x - targetX) > 0.05f)
+        while (Vector2.Distance(target, transform.position) > 0.05f)
         {
-            float direction = Mathf.Sign(targetX - transform.position.x);
+            float direction = Mathf.Sign(target.x - transform.position.x);
             rb.velocity = new Vector2(direction * controller.enemyType.moveSpeed, rb.velocity.y);
             yield return null;
         }
-        rb.velocity = new Vector2(0, rb.velocity.y);
     }
+    
 
-    bool WallCheck()
+    public void StopMoving(Vector2 target)
     {
-        return Physics2D.Raycast(controller.enemyType.wallCheck.position,
-            controller.enemyType.isFacingRight ? Vector2.right : Vector2.left,
-            controller.enemyType.wallCheckDistance, controller.enemyType.wallLayer);
-    }
-
-    public void StopMoving()
-    {
-        if (pathCoroutine != null)
-            StopCoroutine(pathCoroutine);
-        
+        StopCoroutine(FollowPathCoroutine(target));
         rb.velocity = Vector2.zero;
     }
 

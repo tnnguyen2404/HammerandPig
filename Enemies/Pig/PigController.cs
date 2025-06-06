@@ -27,6 +27,11 @@ public class PigController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
     
+    public GameObject alert;
+    public Transform groundCheck;
+    public Transform attackHitBox;
+    public GameObject[] itemDrops;
+    
     [SerializeField] private UnityEngine.Vector3 offSet;
 
     void Awake() 
@@ -61,6 +66,12 @@ public class PigController : MonoBehaviour
     
     public void SwitchState(PigBaseState newState) {
         StateMachine.SwitchState(newState, this);
+    }
+
+    public void OnEnemyAttackFinished()
+    {
+        if (StateMachine.currentState == attackState)
+            SwitchState(idleState);
     }
 
     public bool DetectPlayer()

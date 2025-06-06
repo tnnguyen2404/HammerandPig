@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IDamageable
 {
     public GameObject[] hearts;
     public Animator[] heartAnim;
@@ -18,11 +19,16 @@ public class PlayerHealth : MonoBehaviour
         InitializeHeartAnim();
     }
 
-    void TakeDamage(int damage)
+    public void TakeDamage(int damage)
     {
         curHealth -= damage;
         isAttacked = true;
         UpdateHeartsUI();
+    }
+
+    public void TakeDamage(int damage, bool t)
+    {
+        
     }
     
     private void InitializeHeartAnim() {

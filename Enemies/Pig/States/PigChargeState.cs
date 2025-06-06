@@ -6,14 +6,14 @@ public class PigChargeState : PigBaseState
 {
     public override void EnterState(PigController controller)
     {
-        controller.Movement.FollowPath(controller.Movement.player.transform.position);
-        controller.enemyType.isCharging = true;
+        controller.Movement.FollowPath(controller.Movement.player.position);
+        controller.Movement.isCharging = true;
     }
 
     public override void ExitState(PigController controller)
     {
-       controller.Movement.StopMoving();
-       controller.enemyType.isCharging = false;
+       controller.Movement.StopMoving(controller.Movement.player.position);
+       controller.Movement.isCharging = false;
     }
 
     public override void UpdateState(PigController controller)

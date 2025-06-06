@@ -6,7 +6,11 @@ public class AttackingState : PlayerState
 {
     public override void EnterState(PlayerController controller)
     {
-        controller.Combat.AttackHitBox();
+        if (controller.InputHandler.isAttacking && controller.Combat.attackTimer >= controller.Combat.attackCd)
+        {
+            controller.AnimationController.anim.SetTrigger("Attack");
+            controller.Combat.attackTimer = 0;
+        }
     }
 
     public override void ExitState(PlayerController controller)

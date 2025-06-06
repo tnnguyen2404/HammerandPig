@@ -26,21 +26,17 @@ public class PlayerCombat : MonoBehaviour
 
         if (detectedObject != null)
         {
-            Debug.Log(detectedObject.name);
+            bool playerOnLeft = transform.position.x < detectedObject.transform.position.x;
+            
             IDamageable damageable = detectedObject.GetComponent<IDamageable>();
             if (damageable != null)
                 damageable.TakeDamage(damage);
+            
+                
             
             /*IKnockBackable knockBackable = detectedObject.GetComponent<IKnockBackable>();
             if (knockBackable != null)
                 knockBackable.ApplyKnockBack(new Vector2(knockBackSpeedX, knockBackSpeedY));*/
         }
-    }
-    
-    void OnDrawGizmosSelected()
-    {
-        if (attackHitPosBox == null) return;
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(attackHitPosBox.position, attackRadius);
     }
 }

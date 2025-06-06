@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PigStateMachine
 {
-    private PigBaseState currentState;
+    public PigBaseState currentState;
 
     public void Initialize(PigBaseState startState, PigController controller)
     {

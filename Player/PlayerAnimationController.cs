@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerAnimationController : MonoBehaviour
 {
-    private Animator anim;
+    public Animator anim;
     private Rigidbody2D rb;
     private PlayerJump jump;
     
@@ -28,12 +28,6 @@ public class PlayerAnimationController : MonoBehaviour
         anim.SetFloat("yVelocity", rb.velocity.y);
         anim.SetBool("isGrounded", jump.IsGrounded());
         anim.SetBool("isMoving", inputHandler.isMoving);
-
-        if (inputHandler.isAttacking && combat.attackTimer >= combat.attackCd)
-        {
-            anim.SetTrigger("Attack");
-            combat.attackTimer = 0;
-        }
 
         if (health.isAttacked)
         {

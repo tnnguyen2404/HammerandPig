@@ -41,7 +41,7 @@ public class Box : MonoBehaviour
 
     private void TakeDamage(float[] attackDetails) {
         curHealth -= attackDetails[0];
-        playerFacingDirection = playerController.GetFacingDirection();
+        //playerFacingDirection = playerController.GetFacingDirection();
         if (curHealth > 0.1f && applyKnockBack) {
             KnockBack();
         } else {

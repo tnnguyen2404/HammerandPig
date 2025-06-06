@@ -6,12 +6,12 @@ public class PigDetectPlayerState : PigBaseState
 {
     public override void EnterState(PigController controller)
     {
-       controller.enemyType.alert.SetActive(true);
+       controller.alert.SetActive(true);
     }
 
     public override void UpdateState(PigController controller)
     {
-        if(Time.deltaTime > controller.enemyType.detectionWaitTime)
+        if(Time.time > controller.enemyType.detectionWaitTime)
             controller.SwitchState(controller.chargeState);
         else if (controller.CheckForAttackRange())
             controller.SwitchState(controller.attackState);
@@ -24,6 +24,6 @@ public class PigDetectPlayerState : PigBaseState
 
     public override void ExitState(PigController controller)
     {
-        controller.enemyType.alert.SetActive(false);
+        controller.alert.SetActive(false);
     }
 }
