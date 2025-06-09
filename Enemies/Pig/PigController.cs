@@ -17,6 +17,7 @@ public class PigController : MonoBehaviour
     
     public PigMovement Movement {get; private set;}
     public PigCombat Combat {get; private set;}
+    public PigJump Jump {get; private set;}
     
     public PigBaseState idleState;
     public PigBaseState chargeState;
@@ -27,6 +28,8 @@ public class PigController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
     
+    [SerializeField] private SetupFinding pathFinder;
+    public GameObject player;
     public GameObject alert;
     public Transform groundCheck;
     public Transform attackHitBox;
@@ -45,15 +48,16 @@ public class PigController : MonoBehaviour
         
         Movement = GetComponent<PigMovement>();
         Combat = GetComponent<PigCombat>();
+        Jump = GetComponent<PigJump>();
 
         StateMachine = new PigStateMachine();
+        rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
     }
     void Start()
     {
         StateMachine.Initialize(idleState, this);
-        
-        rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
+        Movement.Initialize(pathFinder, player);
     }
     void Update()
     {
@@ -76,13 +80,13 @@ public class PigController : MonoBehaviour
 
     public bool DetectPlayer()
     {
-        float distance = Vector2.Distance(transform.position, Movement.player.position);
+        float distance = Vector2.Distance(transform.position, player.transform.position);
         return distance <= enemyType.detectRange;
     }
 
     public bool CheckForAttackRange()
     {
-        float distance = Vector2.Distance(transform.position, Movement.player.position);
+        float distance = Vector2.Distance(transform.position, player.transform.position);
         return distance <= enemyType.attackRange;
     }
 

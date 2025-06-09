@@ -19,7 +19,6 @@ public class Find : MonoBehaviour
     public Dictionary<int, Dictionary<int, PathInfo>> LoadPathsFromJson(string filePath)
     {
         Dictionary<int, Dictionary<int, PathInfo>> allPaths = null;
-
         try
         {
             // Kiểm tra xem file có tồn tại không
@@ -142,7 +141,7 @@ public class Find : MonoBehaviour
                 {
                     Action A = new Action();
                     A.SateAction= StateAction.move;
-                    A.Tagert = new Vector2(k + 1, PointNow.y);
+                    A.Target = new Vector2(k + 1, PointNow.y);
                     A.Position = new Vector2(k, PointNow.y);
                     ListR.Add(A);
                 }
@@ -154,7 +153,7 @@ public class Find : MonoBehaviour
                     Action A = new Action();
                     A.SateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
-                    A.Tagert = new Vector2(k - 1, PointNow.y);
+                    A.Target = new Vector2(k - 1, PointNow.y);
                     ListR.Add(A);
                 }
             }
@@ -173,7 +172,7 @@ public class Find : MonoBehaviour
                     {
                       A.ForceJump = new Vector2(action.ForceJump.x,action.ForceJump.y);
                     }
-                    A.Tagert= new Vector2(action.TargetPoint.x, action.TargetPoint.y);
+                    A.Target= new Vector2(action.TargetPoint.x, action.TargetPoint.y);
                     A.Position = new Vector2(action.PointStart.PointPositioni.x, action.PointStart.PointPositioni.y);
                     ListR.Add(A);
                     found = true;
@@ -199,7 +198,7 @@ public class Find : MonoBehaviour
                     Action A = new Action();
                     A.SateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
-                    A.Tagert = new Vector2(k + 1, PointNow.y);
+                    A.Target = new Vector2(k + 1, PointNow.y);
                     ListR.Add(A);
                 }
             }
@@ -210,7 +209,7 @@ public class Find : MonoBehaviour
                     Action A = new Action();
                     A.SateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
-                    A.Tagert = new Vector2(k - 1, PointNow.y);
+                    A.Target = new Vector2(k - 1, PointNow.y);
                     ListR.Add(A);
                 }
             }

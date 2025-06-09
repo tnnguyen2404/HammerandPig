@@ -8,6 +8,8 @@ public class PlayerJump : MonoBehaviour
     [SerializeField] private float groundCheckRadius;
 
     private Rigidbody2D rb;
+
+    public bool isJumping;
     
     public Transform groundCheck;
     public LayerMask whatIsGround;

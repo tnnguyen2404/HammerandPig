@@ -8,5 +8,5 @@ public class Action
     public Vector2 Position;
     public StateAction SateAction;
     public Vector2 ForceJump;
-    public Vector2 Tagert;
+    public Vector2 Target;
 }

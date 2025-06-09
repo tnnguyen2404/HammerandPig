@@ -1,48 +1,56 @@
-﻿using System;
-using System.Collections;
+﻿
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Security.Cryptography;
-using System.Text;
-using Unity.Mathematics;
-using Unity.VisualScripting;
-//using UnityEditor.Experimental.GraphView;
-//using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Tilemaps; 
 using Newtonsoft.Json;
-using static SetupFinding;
 using System.IO;
 using static Find;
+using System;
+using System.Net.WebSockets;
+using System.Security.Cryptography;
+using Unity.VisualScripting;
 public class SetupFinding : MonoBehaviour
 {
+    public static SetupFinding Instance { get; private set; }
+    [Header("Value cần để tính góc nhảy")]
     [SerializeField]float jumpForce = 10;
-    [SerializeField] float gravity = 9.8f * 3f;
     [SerializeField] float horizontalSpeed = 5f;
+    [SerializeField] float gravityScale = 3f;
     [SerializeField] float SizeColiderCheck = 0.3f;
+    [SerializeField] float DivisionByHeight = 3;
+    [SerializeField] float DivisionByWidth = 8;
     public LayerMask MapLayer;
-    List<JumpInfo> jumpInfotg = new List<JumpInfo>();
-    
-    List<InfoPoint> infoPoints = new List<InfoPoint>();
-    [SerializeField] Tilemap TileMapMoveDefault;
-    [SerializeField] Tilemap TileMapCanJump;
+    [Header("Cấu hình Tilemap")]
+    [SerializeField] List<Tilemap> TileMapMoveDefault;
+    [SerializeField] List<Tilemap> TileMapCanJump;
+    [SerializeField] List<Tilemap> TrapTileMap;
     [SerializeField] Tilemap combinedTilemap;
-    public bool DrawLine = false;
-    public bool DrawPlatform = false;
+    [Header("Gizmos Support")]
+    [SerializeField] bool DrawLine = false;
+    [SerializeField] bool DrawPlatform = false;
+    [SerializeField] bool ViewJumpPonit = false;
+    [SerializeField] Vector2 PositionPoint;
+    List<InfoPoint> infoPoints = new List<InfoPoint>();
     List<PlatForm> PlatForms = new List<PlatForm>();
+    Dictionary<int, Dictionary<int, PathInfo>> FindWay;
+    List<PlatForm> PlatFormss = new List<PlatForm>();
+   
+    
     [ContextMenu("Run Method")]
     public void StartMethod()
     {
+        if (CheckValueDead()) return;
         combinedTilemap.ClearAllTiles();
         infoPoints.Clear();
         PlatForms.Clear();
         CombineTilemapsIntoOne(TileMapMoveDefault);
-        if (TileMapCanJump != null)
+        if (TileMapCanJump.Count>0)
         {
             CombineTilemapsIntoOne(TileMapCanJump);
+        }
+        if (TrapTileMap.Count>0) {
+            CombineTilemapsIntoOne(TrapTileMap);
         }
         RunFromInspector(combinedTilemap);
         SetUpJumpLine();
@@ -54,6 +62,48 @@ public class SetupFinding : MonoBehaviour
         var allPaths = FindAllPaths(PlatForms);
         SavePathsToJson(allPaths, "pathsway.json");
         SavePlatForm("pathsPlatForm.json");
+    }
+    bool CheckValueDead()
+    {
+        bool ok = false;
+        if (combinedTilemap == null)
+        {
+            Debug.Log("Chưa có combinedTilemap");
+            ok = true;
+        }
+        if (TileMapMoveDefault.Count<=0)
+        {
+            Debug.Log("Chưa có combinedTilemap"); ok = true;
+        }
+        if (jumpForce<=0)
+        {
+            Debug.Log("jumpForce Phải lớn hơn 0"); ok = true;
+        }
+        if (gravityScale<=0)
+        {
+            Debug.Log("gravityScale Phải lớn hơn 0"); ok = true;
+        }
+        if (horizontalSpeed<=0)
+        {
+            Debug.Log("horizontalSpeed Phải lớn hơn 0"); ok = true;
+        }
+        if (SizeColiderCheck<=0)
+        {
+            Debug.Log("SizeColiderCheck Phải lớn hơn 0"); ok = true;
+        }
+        return ok;
+    }
+    private void Awake()
+    {
+        StartMethod();
+        Instance = this;
+    }
+    private void Start()
+    {
+       
+        FindWay = LoadPathsFromJson("pathsway.json");
+        PlatForms = LoadPathsPlatForm("pathsPlatForm.json");
+        
     }
     public static Dictionary<int, Dictionary<int, PathInfo>> FindAllPaths(List<PlatForm> platforms)
     {
@@ -150,15 +200,6 @@ public class SetupFinding : MonoBehaviour
         string json = JsonConvert.SerializeObject(PlatForms, Formatting.Indented);
         System.IO.File.WriteAllText(filename, json);
     }
-    public Dictionary<int, Dictionary<int, PathInfo>> LoadPathsFromJson(string filePath)
-    {
-                // Đọc JSON từ file
-                string json = File.ReadAllText(filePath);
-
-                // Chuyển đổi JSON thành Dictionary<int, Dictionary<int, PathInfo>>
-                var allPaths = JsonConvert.DeserializeObject<Dictionary<int, Dictionary<int, PathInfo>>>(json);
-        return allPaths;
-    }
     void SelectLineJump()
     {
         foreach (var point in infoPoints)
@@ -202,27 +243,35 @@ public class SetupFinding : MonoBehaviour
                 }
             }
         }
-        if (TileMapCanJump != null)
+        if (TileMapCanJump.Count >0)
         {
             foreach (var point in infoPoints)
             {
-                if (TileMapCanJump.HasTile(new Vector3Int((int)point.PointPosition.x, (int)point.PointPosition.y + 1, (int)0)))
+                foreach (var i in TileMapCanJump)
                 {
-                    JumpInfo j = new JumpInfo();
-                    j.EndJump = new Vector2(point.PointPosition.x, point.PointPosition.y + 2);
-                    j.ForceJump = new Vector2(0, jumpForce);
-                    point.jumpInfo.Add(j);
+                    if (i.HasTile(new Vector3Int((int)point.PointPosition.x, (int)point.PointPosition.y + 1, (int)0)))
+                    {
+                        JumpInfo j = new JumpInfo();
+                        j.EndJump = new Vector2(point.PointPosition.x, point.PointPosition.y + 2);
+                        j.ForceJump = new Vector2(0, jumpForce);
+                        point.jumpInfo.Add(j);
+                        break;
+                    }
                 }
             }
         }
     }
 
-    void CombineTilemapsIntoOne(Tilemap sourceTilemap)
+    void CombineTilemapsIntoOne(List<Tilemap> sourceTilemap)
     {
-        foreach (var pos in sourceTilemap.cellBounds.allPositionsWithin)
+        foreach (var tilemap in sourceTilemap)
         {
-            if (!sourceTilemap.HasTile(pos)) continue;
-            combinedTilemap.SetTile(pos, sourceTilemap.GetTile(pos));
+            if (tilemap != null)
+            foreach (var pos in tilemap.cellBounds.allPositionsWithin)
+            {
+                if (!tilemap.HasTile(pos)) continue;
+                combinedTilemap.SetTile(pos, tilemap.GetTile(pos));
+            }
         }
     }
 
@@ -230,46 +279,49 @@ public class SetupFinding : MonoBehaviour
     {
         foreach (var pf in PlatForms)
         {
-            List<ActionChangePlatform> PFtagert = new List<ActionChangePlatform>();
+            List<ActionChangePlatform> PFtarget = new List<ActionChangePlatform>();
             foreach (var i in pf.PointInPlatForm)
             {
                 if (i.SatePoint == SatePoint.LeftEdge && i.LeftPoint.PosionGet != i.PointPosition)
                 {
                     ActionChangePlatform actionChangePlatform = new ActionChangePlatform();
+
                     actionChangePlatform.PlatFormTargetID = GetPlatformToPoint(i.LeftPoint.PosionGet).IDPlatform;
                     actionChangePlatform.stateAction = StateAction.fall;
                     actionChangePlatform.TargetPoint = i.LeftPoint.PosionGeti;
                     actionChangePlatform.PointStart = i;
-                    PFtagert.Add(actionChangePlatform);
+                    PFtarget.Add(actionChangePlatform);
                 }
                 else if (i.SatePoint == SatePoint.RightEdge && i.RightPoint.PosionGet != i.PointPosition)
                 {
                     ActionChangePlatform actionChangePlatform = new ActionChangePlatform();
-                    actionChangePlatform.PlatFormTargetID = GetPlatformToPoint(i.RightPoint.PosionGet).IDPlatform;
+                    actionChangePlatform.PlatFormTargetID = GetPlatformToPoint(i.RightPoint.PosionGet).IDPlatform; 
                     actionChangePlatform.stateAction = StateAction.fall;
                     actionChangePlatform.TargetPoint = i.RightPoint.PosionGeti;
                     actionChangePlatform.PointStart = i;
-                    PFtagert.Add(actionChangePlatform);
+                    PFtarget.Add(actionChangePlatform);
                 }
                 else if (i.SatePoint == SatePoint.Solo )
                 {
                     if (i.RightPoint.PosionGet != i.PointPosition)
                     {
                         ActionChangePlatform actionChangePlatform = new ActionChangePlatform();
+
                         actionChangePlatform.PlatFormTargetID = GetPlatformToPoint(i.RightPoint.PosionGet).IDPlatform;
                         actionChangePlatform.stateAction = StateAction.fall;
                         actionChangePlatform.TargetPoint = i.RightPoint.PosionGeti;
                         actionChangePlatform.PointStart = i;
-                        PFtagert.Add(actionChangePlatform);
+                        PFtarget.Add(actionChangePlatform);
                     }
                     if (i.LeftPoint.PosionGet != i.PointPosition)
                     {
                         ActionChangePlatform actionChangePlatform1 = new ActionChangePlatform();
+
                         actionChangePlatform1.PlatFormTargetID = GetPlatformToPoint(i.LeftPoint.PosionGet).IDPlatform;
                         actionChangePlatform1.stateAction = StateAction.fall;
                         actionChangePlatform1.TargetPoint = i.LeftPoint.PosionGeti;
                         actionChangePlatform1.PointStart = i;
-                        PFtagert.Add(actionChangePlatform1);
+                        PFtarget.Add(actionChangePlatform1);
                     }
                 }
 
@@ -278,7 +330,6 @@ public class SetupFinding : MonoBehaviour
                     actionChangePlatform1.PlatFormTargetID = GetPlatformToPoint(JumpIf.EndJump).IDPlatform;
                     actionChangePlatform1.stateAction = StateAction.jump;
                     actionChangePlatform1.PointStart = i;
-                    
                     actionChangePlatform1.TargetPoint = JumpIf.EndJumpi;
                     foreach (var j in actionChangePlatform1.PointStart.jumpInfo)
                     {
@@ -288,18 +339,19 @@ public class SetupFinding : MonoBehaviour
                             break;
                         }
                     }
-                    PFtagert.Add(actionChangePlatform1);
+                    PFtarget.Add(actionChangePlatform1);
                 }
             }
 
-            pf.actionChangePlatform = PFtagert;
+            pf.actionChangePlatform = PFtarget;
         }
         foreach (var pf in PlatForms)
         {
             List<ActionChangePlatform> Pftg = new List<ActionChangePlatform>();
             foreach (var p in pf.actionChangePlatform)
             {   bool ok = false;
-                foreach(var i in Pftg)
+                
+                    foreach (var i in Pftg)
                 {
                     if(p == i && p.PlatFormTargetID == i.PlatFormTargetID)
                     {
@@ -384,8 +436,6 @@ public class SetupFinding : MonoBehaviour
     }
     #endregion
 
-
-
     #region Setup line
     private void RunFromInspector(Tilemap tilemap)
     {
@@ -399,6 +449,22 @@ public class SetupFinding : MonoBehaviour
 
         foreach (Vector3Int cellPosition in bounds.allPositionsWithin)
         {
+            bool Check = false;
+            if (TrapTileMap.Count >0)
+                foreach (var i in TrapTileMap)
+                {
+                    bool ok = false;
+                    foreach (Vector3Int pos in i.cellBounds.allPositionsWithin)
+                    {
+                        if (cellPosition == pos)
+                        {  Check = true;
+                            ok = true;
+                            break; }
+                    }
+                    if (ok) break;
+                }
+            if (Check) continue;
+
             if (!tilemap.HasTile(cellPosition))
                 continue;
 
@@ -458,6 +524,19 @@ public class SetupFinding : MonoBehaviour
                         {
                             if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
                             {
+                                if (TrapTileMap.Count > 0)
+                                { 
+                                    bool ok = false;
+                                    foreach (var Tilemap in TrapTileMap)
+                                    {
+                                        if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
+                                        {
+                                            ok = true;
+                                            break;
+                                        }
+                                        if (ok) break;
+                                    }
+                                }
                                 infoPoints[i].LeftPoint.action = StateAction.fall;
                                 tg = new Vector2((int)infoPoints[i].PointPosition.x - 1, j + 1);
                                 break;
@@ -486,6 +565,19 @@ public class SetupFinding : MonoBehaviour
                         {
                             if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
                             {
+                                if (TrapTileMap.Count > 0)
+                                {
+                                    bool ok = false;
+                                    foreach (var Tilemap in TrapTileMap)
+                                    {
+                                        if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
+                                        {
+                                            ok = true;
+                                            break;
+                                        }
+                                        if (ok) break;
+                                    }
+                                }
                                 infoPoints[i].RightPoint.action = StateAction.fall;
                                 tg = new Vector2((int)infoPoints[i].PointPosition.x + 1, j + 1);
                                 break;
@@ -511,6 +603,19 @@ public class SetupFinding : MonoBehaviour
                             {
                                 if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
                                 {
+                                    if (TrapTileMap.Count > 0)
+                                    {
+                                        bool ok = false;
+                                        foreach (var Tilemap in TrapTileMap)
+                                        {
+                                            if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
+                                            {
+                                                ok = true;
+                                                break;
+                                            }
+                                            if (ok) break;
+                                        }
+                                    }
                                     infoPoints[i].LeftPoint.action = StateAction.fall;
                                     tg = new Vector2((int)infoPoints[i].PointPosition.x - 1, j + 1);
                                     break;
@@ -526,6 +631,19 @@ public class SetupFinding : MonoBehaviour
                             {
                                 if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
                                 {
+                                    if (TrapTileMap.Count > 0)
+                                    {
+                                        bool ok = false;
+                                        foreach (var Tilemap in TrapTileMap)
+                                        {
+                                            if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
+                                            {
+                                                ok = true;
+                                                break;
+                                            }
+                                            if (ok) break;
+                                        }
+                                    }
                                     infoPoints[i].RightPoint.action = StateAction.fall;
                                     tgr = new Vector2((int)infoPoints[i].PointPosition.x + 1, j + 1);
                                     break;
@@ -540,6 +658,19 @@ public class SetupFinding : MonoBehaviour
                             {
                                 if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
                                 {
+                                    if (TrapTileMap.Count > 0)
+                                    {
+                                        bool ok = false;
+                                        foreach (var Tilemap in TrapTileMap)
+                                        {
+                                            if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x - 1, j, 0)))
+                                            {
+                                                ok = true;
+                                                break;
+                                            }
+                                            if (ok) break;
+                                        }
+                                    }
                                     infoPoints[i].LeftPoint.action = StateAction.fall;
                                     tg = new Vector2((int)infoPoints[i].PointPosition.x - 1, j + 1);
                                     break;
@@ -551,6 +682,19 @@ public class SetupFinding : MonoBehaviour
                             {
                                 if (tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
                                 {
+                                    if (TrapTileMap.Count > 0)
+                                    {
+                                        bool ok = false;
+                                        foreach (var Tilemap in TrapTileMap)
+                                        {
+                                            if (Tilemap.HasTile(new Vector3Int((int)infoPoints[i].PointPosition.x + 1, j, 0)))
+                                            {
+                                                ok = true;
+                                                break;
+                                            }
+                                            if (ok) break;
+                                        }
+                                    }
                                     infoPoints[i].RightPoint.action = StateAction.fall;
                                     tgr = new Vector2((int)infoPoints[i].PointPosition.x + 1, j + 1);
                                     break;
@@ -582,17 +726,13 @@ public class SetupFinding : MonoBehaviour
     }
 
     #endregion
-    private void Start()
-    {
-        
-    }
     void SetUpJumpLine()
     {
         for (int k = -1; k <= 1; k+=2)
         {
-            for (int i = 1; i <= 8; i++)
+            for (int i = 1; i <= DivisionByWidth; i++)
             {
-                for (float j = 1; j <= 3f; j += 0.2f)
+                for (float j = 1; j <= DivisionByHeight; j += 0.2f)
                 {
                     foreach (var point in infoPoints)
                     {
@@ -602,7 +742,6 @@ public class SetupFinding : MonoBehaviour
                 }
             }
         }
-
     }
     void SelectStepPoint(LayerMask tileLayerMask)
     {
@@ -611,7 +750,6 @@ public class SetupFinding : MonoBehaviour
             for (int j = point.jumpInfo.Count - 1; j >= 0; j--) // Duyệt ngược để tránh lỗi xóa phần tử
             {
                 var InforJump = point.jumpInfo[j];
-
                 // Tìm điểm có độ cao lớn nhất
                 int maxHeightIndex = -1;
                 float maxHeight = float.MinValue;
@@ -623,13 +761,24 @@ public class SetupFinding : MonoBehaviour
                         maxHeightIndex = i;
                     }
                 }
-
                 int firstCollisionIndex = -1;
                 for (int i = 0; i < InforJump.PointStep.Count; i++)
                 {
                     Vector2 pointPosition = new Vector2(InforJump.PointStep[i].x, InforJump.PointStep[i].y);
-
                     Collider2D collider = Physics2D.OverlapCircle(pointPosition, SizeColiderCheck, tileLayerMask);
+                    if (TrapTileMap.Count>0)
+                    {
+                        Collider2D collider1 = new Collider2D();
+                        foreach (var tilemap in TrapTileMap) {
+                            collider1 = Physics2D.OverlapCircle(pointPosition, SizeColiderCheck, tilemap.gameObject.layer);
+                            if (collider1 != null)
+                            {
+                                point.jumpInfo.RemoveAt(j);
+                                continue;
+                            }
+                        }
+                        
+                    }
                     if (collider != null)
                     {
                         if (maxHeightIndex > i && point.PointPosition != new Vector2(CustomRound(pointPosition.x), CustomRound(pointPosition.y)))
@@ -646,13 +795,11 @@ public class SetupFinding : MonoBehaviour
                         }
                     }
                 }
-
                 if (firstCollisionIndex < maxHeightIndex)
                 {
                     point.jumpInfo.RemoveAt(j);
                     continue;
                 }
-
                 if (firstCollisionIndex != -1)
                 {
                     for (int i = InforJump.PointStep.Count - 1; i >= firstCollisionIndex; i--)
@@ -663,7 +810,6 @@ public class SetupFinding : MonoBehaviour
             }
         }
     }
-
     int CustomRound(float value)
     {
         if (value > 0)
@@ -677,8 +823,10 @@ public class SetupFinding : MonoBehaviour
     }
     PlatForm GetPlatformToPoint(Vector2 P)
     {
-        PlatForm platForm = null;
-        foreach(var Pl in PlatForms)
+
+        PlatForm platForm = new PlatForm();
+        platForm.IDPlatform = -1;
+        foreach (var Pl in PlatForms)
         {
             if(Pl.LeftPoint.y == P.y)
             {
@@ -700,16 +848,13 @@ public class SetupFinding : MonoBehaviour
         }
         return platForm;
     }
-    bool CheckJumpPlatform(Vector2 PointStart , Vector2 PointTagert)
+    bool CheckJumpPlatform(Vector2 PointStart , Vector2 PointTarget)
     {
        
         foreach (var pl in PlatForms)
         {
-          
-            if (pl.LeftPoint.y == PointTagert.y)
-               
+            if (pl.LeftPoint.y == PointTarget.y)
             {
-               
                 bool t1 = false;
                 bool t2 = false;
                 foreach(var p in pl.PointInPlatForm)
@@ -718,11 +863,10 @@ public class SetupFinding : MonoBehaviour
                     {
                         t1 = true;
                     }
-                    if (PointTagert == p.PointPosition)
+                    if (PointTarget == p.PointPosition)
                     {
                         t2 = true;
                     }
-
                 }
                 if(t1 && t2)
                 {
@@ -740,28 +884,21 @@ public class SetupFinding : MonoBehaviour
         List<Vector2> PointsStep = new List<Vector2>();
         PointsStep.Add(new Vector2(previousPoint.x, previousPoint.y)); 
         float totalTime =1;
-
         float timeStep = totalTime / (totalSteps - 1);
 
         for (int i = 1; i < totalSteps; i++) 
         {
             float t = i * timeStep;
-
-            
             float x = force.x * t;
-            float y = (force.y * t) - (0.5f * gravity * t * t);
+            float y = (force.y * t) - (0.5f * gravityScale*9.8f * t * t);
             Vector2 currentPoint = new Vector2(previousPoint.x + x, previousPoint.y + y);
-
             PointsStep.Add(currentPoint);
           
         }
-
         // Tạo thông tin nhảy
         JumpInfo jif = new JumpInfo();
         jif.ForceJump = force;
         jif.PointStep = PointsStep;
-
-       
         foreach (var pointi in infoPoints)
         {
             if (pointi.PointPosition == LocationJump)
@@ -771,9 +908,35 @@ public class SetupFinding : MonoBehaviour
         }
         
     }
-
     void OnDrawGizmos()
         {
+        if (ViewJumpPonit)
+        {
+            foreach (var pointi in infoPoints)
+            {
+                if (pointi.PointPosition == PositionPoint) {
+                    foreach(JumpInfo Jump in pointi.jumpInfo){
+                        Gizmos.color = Color.white;
+                        for (int i = 0; i < Jump.PointStep.Count -2; i++)
+                        {
+                            Gizmos.DrawLine(Jump.PointStep[i], Jump.PointStep[i + 1]);
+                        }
+                         Gizmos.color = Color.red;
+                        Gizmos.DrawLine(pointi.PointPosition+new Vector2(0.5f,0), Jump.EndJump + new Vector2(0.5f, 0));
+                    }
+                    Gizmos.color = Color.red;
+                    if (pointi.LeftPoint.action == StateAction.fall)
+                    {
+                        Gizmos.DrawLine(pointi.PointPosition + new Vector2(0.5f, 0), pointi.LeftPoint.PosionGet + new Vector2(0.5f, 0));
+                    }
+                    if (pointi.RightPoint.action == StateAction.fall)
+                    {
+                        Gizmos.DrawLine(pointi.PointPosition + new Vector2(0.5f, 0), pointi.LeftPoint.PosionGet + new Vector2(0.5f, 0));
+                    }
+                    break;
+                }
+            }
+        }
         if(DrawLine)
             if (infoPoints.Count > 0)
                 foreach (var i in infoPoints)
@@ -811,9 +974,9 @@ public class SetupFinding : MonoBehaviour
         Gizmos.color = UnityEngine.Color.white;
         if(DrawPlatform)
         foreach(var i in PlatForms)
-        {
+           {
             Gizmos.DrawLine(i.LeftPoint + new Vector2(0,0.5f), i.RightPoint + new Vector2(1, 0.5f));
-        }
+           }
         }
         void draw(InfoPoint i)
         {
@@ -827,7 +990,240 @@ public class SetupFinding : MonoBehaviour
             Gizmos.DrawLine(i.PointPosition + new Vector2(0.5f, 0), j.EndJump + new Vector2(0.5f, 0));
         }
         }
-      
-    
+
+
+    public Dictionary<int, Dictionary<int, PathInfo>> LoadPathsFromJson(string filePath)
+    {
+        Dictionary<int, Dictionary<int, PathInfo>> allPaths = null;
+        try
+        {
+            // Kiểm tra xem file có tồn tại không
+            if (!File.Exists(filePath))
+            {
+                Debug.LogError("File không tồn tại: " + filePath);
+                return null;
+            }
+
+            // Đọc JSON từ file
+            string json = File.ReadAllText(filePath);
+
+
+
+            // Chuyển đổi JSON thành Dictionary<int, Dictionary<int, PathInfo>>
+            allPaths = JsonConvert.DeserializeObject<Dictionary<int, Dictionary<int, PathInfo>>>(json);
+
+            // Kiểm tra xem JSON có deserialize thành công không
+            if (allPaths == null)
+            {
+                Debug.LogError("JSON không hợp lệ, không thể deserialize.");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("Lỗi khi đọc và deserializing JSON: " + ex.Message);
+        }
+
+        return allPaths;
+    }
+    public List<PlatForm> LoadPathsPlatForm(string filePath)
+    {
+        // Đọc JSON từ file
+        string json = File.ReadAllText(filePath);
+
+        List<PlatForm> platforms = JsonConvert.DeserializeObject<List<PlatForm>>(json);
+
+
+        return platforms;
+    }
+
+    public List<Action> Findd(Vector2 start, Vector2 end)
+    {
+        if (FindWay == null || FindWay.Count == 0)
+        {
+            Debug.Log("Không đọc được Json");
+            return new List<Action>();
+        }
+        return FindWayPointToPoint(new Vector2(CustomRound(start.x), CustomRound(start.y)), new Vector2(CustomRound(end.x), CustomRound(end.y)));
+    }
+
+    public List<Action> FindWayPointToPoint(Vector2 start, Vector2 end)
+    {
+        PlatForm PfStart = getPlatForm(FindPlatForm(start));
+        PlatForm PfEnd = getPlatForm(FindPlatForm(end));
+        List<Action> ListR = new List<Action>();
+        if (PfStart == null || PfEnd == null)
+        {
+            Debug.LogError("Không tìm thấy nền tảng!");
+            return ListR;
+        }
+        PathInfo WatRun = new PathInfo();
+        if (FindWay.TryGetValue(PfStart.IDPlatform, out var innerDict) &&
+            innerDict.TryGetValue(PfEnd.IDPlatform, out PathInfo savedWatRun))
+        {
+            WatRun = savedWatRun;
+        }
+        if (WatRun.Path == null || WatRun.Path.Count == 0)
+        {
+
+            return new List<Action>();
+        }
+
+        Vector2 PointNow = start;
+
+        for (int i = 0; i < WatRun.Path.Count - 1; i++)
+        {
+
+            PlatForm platForm = getPlatForm(WatRun.Path[i]);
+
+            List<Vector2> ListPointCanChange = new List<Vector2>();
+
+            foreach (var action in platForm.actionChangePlatform)
+            {
+                if (action.PlatFormTargetID == WatRun.Path[i + 1]) // Sửa điều kiện
+                {
+                    ListPointCanChange.Add(new Vector2(action.PointStart.PointPositioni.x, action.PointStart.PointPositioni.y));
+                }
+            }
+
+            if (ListPointCanChange.Count == 0)
+            {
+                Debug.LogError($"Không tìm thấy điểm chuyển trên nền tảng {WatRun.Path[i]}");
+                return new List<Action>();
+            }
+
+            // Chọn điểm gần nhất
+            Vector2 minVector = ListPointCanChange[0];
+            float minDistance = MathF.Abs(PointNow.x - minVector.x);
+
+            foreach (var point in ListPointCanChange)
+            {
+                float distance = MathF.Abs(PointNow.x - point.x);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    minVector = point;
+                }
+            }
+
+            // Di chuyển theo trục X
+            if (minVector.x > PointNow.x)
+            {
+                for (int k = (int)PointNow.x; k <= minVector.x - 1; k++)
+                {
+                    Action A = new Action();
+                    A.SateAction = StateAction.move;
+                    A.Target = new Vector2(k + 1, PointNow.y);
+                    A.Position = new Vector2(k, PointNow.y);
+                    ListR.Add(A);
+                }
+            }
+            else
+            {
+                for (int k = (int)PointNow.x; k >= minVector.x + 1; k--)
+                {
+                    Action A = new Action();
+                    A.SateAction = StateAction.move;
+                    A.Position = new Vector2(k, PointNow.y);
+                    A.Target = new Vector2(k - 1, PointNow.y);
+                    ListR.Add(A);
+                }
+            }
+            // Tìm điểm đến trên nền tiếp theo
+
+            bool found = false;
+
+            foreach (var action in platForm.actionChangePlatform)
+            {
+                if (new Vector2(action.PointStart.PointPositioni.x, action.PointStart.PointPositioni.y) == minVector && action.PlatFormTargetID == WatRun.Path[i + 1])
+                {
+                    PointNow = new Vector2(action.TargetPoint.x, action.TargetPoint.y);
+                    Action A = new Action();
+                    A.SateAction = action.stateAction;
+                    if (A.SateAction == StateAction.jump)
+                    {
+                        A.ForceJump = new Vector2(action.ForceJump.x, action.ForceJump.y);
+                    }
+                    A.Target = new Vector2(action.TargetPoint.x, action.TargetPoint.y);
+                    A.Position = new Vector2(action.PointStart.PointPositioni.x, action.PointStart.PointPositioni.y);
+                    ListR.Add(A);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                Debug.LogError($"Không tìm thấy điểm đến từ {PointNow} trên nền {WatRun.Path[i + 1]}");
+                Debug.LogError(minVector);
+                return new List<Action>();
+            }
+        }
+
+        Vector2 minVectorr = end;
+        if (end != PointNow)
+        {
+            if (minVectorr.x > PointNow.x)
+            {
+                for (int k = (int)PointNow.x; k <= minVectorr.x; k++)
+                {
+                    Action A = new Action();
+                    A.SateAction = StateAction.move;
+                    A.Position = new Vector2(k, PointNow.y);
+                    A.Target = new Vector2(k + 1, PointNow.y);
+                    ListR.Add(A);
+                }
+            }
+            else
+            {
+                for (int k = (int)PointNow.x; k >= minVectorr.x; k--)
+                {
+                    Action A = new Action();
+                    A.SateAction = StateAction.move;
+                    A.Position = new Vector2(k, PointNow.y);
+                    A.Target = new Vector2(k - 1, PointNow.y);
+                    ListR.Add(A);
+                }
+            }
+        }
+        return ListR;
+    }
+    public int FindPlatForm(Vector2 Pposision)
+    {
+        Vector2 posision = new Vector2(CustomRound(Pposision.x), CustomRound(Pposision.y));
+        int ID = -1;
+        foreach (var platform in PlatForms)
+        {
+            bool found = false;
+            foreach (var point in platform.PointInPlatForm)
+            {
+                if (point.PointPositioni.x == posision.x && point.PointPositioni.y == posision.y)
+                {
+                    ID = platform.IDPlatform;
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+            {
+                break;
+            }
+        }
+        return ID;
+    }
+    PlatForm getPlatForm(int id)
+    {
+        PlatForm tg = new PlatForm();
+        foreach (var platform in PlatForms)
+        {
+            if (platform.IDPlatform == id)
+            {
+                tg = platform;
+                break;
+            }
+        }
+        return tg;
+    }
+
 }
 

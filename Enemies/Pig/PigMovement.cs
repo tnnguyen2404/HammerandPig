@@ -4,79 +4,105 @@ using UnityEngine;
 
 public class PigMovement : MonoBehaviour
 {
-    public Transform player;
+    private GameObject player;
     private Rigidbody2D rb;
     private PigController controller;
-    private PigJump jump;
 
-    private Find pathFinder;
-    private Queue<Action> currentPath = new Queue<Action>();
-    private Coroutine pathCoroutine;
+    private SetupFinding pathFinder;
+    private List<Action> currentPath;
     
     public bool isCharging;
+    public bool isFacingRight = false;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
-        pathFinder = GetComponent<Find>();
-        jump = GetComponent<PigJump>();
     }
 
-    public void FollowPath(Vector2 target)
+    public void Initialize(SetupFinding finder, GameObject target)
     {
-        StartCoroutine(FollowPathCoroutine(target));
+        pathFinder = finder;
+        player = target;
     }
 
-    IEnumerator FollowPathCoroutine(Vector2 target)
+    public void StartPath()
     {
-        currentPath.Clear();
-        var actionList = pathFinder.Findd(transform.position, target);
-        if (actionList.Count == 0)
+        controller.Jump.isJumping = false;
+    }
+
+    public void HandlePath()
+    {
+        if (currentPath == null || currentPath.Count == 0)
         {
-            yield break;
+            UpdatePath();
+            return;
         }
 
-        foreach (var action in actionList)
+        MoveAlongPath();
+    }
+
+    private void UpdatePath()
+    {
+        Vector2 start = RoundVec(transform.position);
+        Vector2 target = RoundVec(player.transform.position);
+        
+        if (pathFinder == null)
         {
-            currentPath.Enqueue(action);
+            Debug.LogError("Pathfinder is NULL — did you assign SetupFinding?");
+            return;
         }
 
-        while (currentPath.Count > 0)
-        {
-            Action current = currentPath.Dequeue();
+        if (pathFinder.FindPlatForm(start) == 1) return;
+        
+        currentPath = pathFinder.Findd(start, target);
+    }
 
-            switch (current.SateAction)
-            {
-                case StateAction.move:
-                    yield return MoveToX(current.Tagert);
-                    break;
-                case StateAction.jump:
-                    jump.Jump();
-                    yield return new WaitForSeconds(1f);
-                    break;
-                case StateAction.fall:
-                    yield return new WaitUntil(() => jump.CheckForGround());
-                    break;
-            }
+    private void MoveAlongPath()
+    {
+        if (currentPath.Count == 0) return;
+        
+        Vector2 curPos = RoundVec(transform.position);
+
+        if (currentPath[0].Target == curPos)
+        {
+            currentPath.RemoveAt(0);
+            return;
+        }
+        
+        Action currentAction = currentPath[0];
+
+        switch (currentAction.SateAction)
+        {
+            case StateAction.move:
+                float dir = currentAction.Target.x < transform.position.x ? -1 : 1;
+                rb.velocity = new Vector2(dir * controller.enemyType.moveSpeed, rb.velocity.y);
+                
+                if (dir != 1 && isFacingRight)
+                    FlipSprite();
+                else if (dir == 1 && !isFacingRight)
+                    FlipSprite();
+                
+                break;
+            case StateAction.fall:
+                rb.velocity = new Vector2(0, rb.velocity.y);
+                break;
+            case StateAction.jump:
+                StartCoroutine(DoJump());
+                break;
         }
     }
 
-    IEnumerator MoveToX(Vector2 target)
+    IEnumerator DoJump()
     {
-        while (Vector2.Distance(target, transform.position) > 0.05f)
-        {
-            float direction = Mathf.Sign(target.x - transform.position.x);
-            rb.velocity = new Vector2(direction * controller.enemyType.moveSpeed, rb.velocity.y);
-            yield return null;
-        }
+        yield return new WaitForSeconds(0.1f);
+        controller.Jump.Jump();
+        yield return new WaitForSeconds(1f);
     }
-    
 
-    public void StopMoving(Vector2 target)
+    private Vector2 RoundVec(Vector2 v)
     {
-        StopCoroutine(FollowPathCoroutine(target));
-        rb.velocity = Vector2.zero;
+        return new Vector2(Mathf.FloorToInt(v.x), Mathf.FloorToInt(v.y));
     }
 
     public void FlipSprite()

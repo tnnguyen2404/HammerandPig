@@ -8,6 +8,7 @@ public class PigJump : MonoBehaviour
     private Rigidbody2D rb;
     
     public bool isGrounded;
+    public bool isJumping;
 
     void Awake()
     {

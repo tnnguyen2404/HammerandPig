@@ -9,16 +9,11 @@ public class EnemyTypeSO : ScriptableObject
     [Header("Basic Info")] 
     public string enemyName;
     
-
     [Header("Stats")] 
     public int maxHealth;
     public float jumpForce;
     
     [Header("Boolean")]
-    public bool isGrounded;
-    public bool isTouchingWall;
-    public bool isMoving;
-    public bool isJumping;
     public bool isAlive;
     public bool isFacingRight;
     public bool isAttacked;
