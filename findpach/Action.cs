@@ -6,7 +6,7 @@ using static SetupFinding;
 public class Action 
 {
     public Vector2 Position;
-    public StateAction SateAction;
+    public StateAction StateAction;
     public Vector2 ForceJump;
     public Vector2 Target;
 }

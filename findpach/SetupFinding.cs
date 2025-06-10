@@ -1112,7 +1112,7 @@ public class SetupFinding : MonoBehaviour
                 for (int k = (int)PointNow.x; k <= minVector.x - 1; k++)
                 {
                     Action A = new Action();
-                    A.SateAction = StateAction.move;
+                    A.StateAction = StateAction.move;
                     A.Target = new Vector2(k + 1, PointNow.y);
                     A.Position = new Vector2(k, PointNow.y);
                     ListR.Add(A);
@@ -1123,7 +1123,7 @@ public class SetupFinding : MonoBehaviour
                 for (int k = (int)PointNow.x; k >= minVector.x + 1; k--)
                 {
                     Action A = new Action();
-                    A.SateAction = StateAction.move;
+                    A.StateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
                     A.Target = new Vector2(k - 1, PointNow.y);
                     ListR.Add(A);
@@ -1139,8 +1139,8 @@ public class SetupFinding : MonoBehaviour
                 {
                     PointNow = new Vector2(action.TargetPoint.x, action.TargetPoint.y);
                     Action A = new Action();
-                    A.SateAction = action.stateAction;
-                    if (A.SateAction == StateAction.jump)
+                    A.StateAction = action.stateAction;
+                    if (A.StateAction == StateAction.jump)
                     {
                         A.ForceJump = new Vector2(action.ForceJump.x, action.ForceJump.y);
                     }
@@ -1168,7 +1168,7 @@ public class SetupFinding : MonoBehaviour
                 for (int k = (int)PointNow.x; k <= minVectorr.x; k++)
                 {
                     Action A = new Action();
-                    A.SateAction = StateAction.move;
+                    A.StateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
                     A.Target = new Vector2(k + 1, PointNow.y);
                     ListR.Add(A);
@@ -1179,7 +1179,7 @@ public class SetupFinding : MonoBehaviour
                 for (int k = (int)PointNow.x; k >= minVectorr.x; k--)
                 {
                     Action A = new Action();
-                    A.SateAction = StateAction.move;
+                    A.StateAction = StateAction.move;
                     A.Position = new Vector2(k, PointNow.y);
                     A.Target = new Vector2(k - 1, PointNow.y);
                     ListR.Add(A);

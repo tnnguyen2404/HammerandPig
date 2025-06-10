@@ -4,111 +4,81 @@ using UnityEngine;
 
 public class PigMovement : MonoBehaviour
 {
-    private GameObject player;
+    private GameObject target;
     private Rigidbody2D rb;
     private PigController controller;
 
-    private SetupFinding pathFinder;
-    private List<Action> currentPath;
+    private SetupFinding setupFinding;
+    private Find finder;
+    private List<Action> actions = new List<Action>();
+    private int curIndex;
     
     public bool isCharging;
-    public bool isFacingRight = false;
 
-    void Awake()
+    public void Initialize(SetupFinding setupFindingRef, GameObject targetRef)
     {
+        setupFinding = setupFindingRef != null ? setupFindingRef : SetupFinding.Instance;
+        if (setupFindingRef != null)
+            Debug.Log("setupfinding is null");
+        
+        finder = setupFinding != null ? setupFinding.GetComponent<Find>() : null;
+        if (finder != null)
+        {
+            finder = FindObjectOfType<Find>();
+            if (finder != null)
+                Debug.Log("finder is null");
+        }
+        
+        target = targetRef;
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
     }
 
-    public void Initialize(SetupFinding finder, GameObject target)
-    {
-        pathFinder = finder;
-        player = target;
-    }
-
     public void StartPath()
     {
-        controller.Jump.isJumping = false;
+        actions = finder.Findd(transform.position, target.transform.position);
+        curIndex = 0;
     }
 
-    public void HandlePath()
+    public void Movement()
     {
-        if (currentPath == null || currentPath.Count == 0)
-        {
-            UpdatePath();
-            return;
-        }
-
-        MoveAlongPath();
-    }
-
-    private void UpdatePath()
-    {
-        Vector2 start = RoundVec(transform.position);
-        Vector2 target = RoundVec(player.transform.position);
+        if (actions == null || curIndex >= actions.Count) return;
         
-        if (pathFinder == null)
-        {
-            Debug.LogError("Pathfinder is NULL — did you assign SetupFinding?");
-            return;
-        }
-
-        if (pathFinder.FindPlatForm(start) == 1) return;
-        
-        currentPath = pathFinder.Findd(start, target);
-    }
-
-    private void MoveAlongPath()
-    {
-        if (currentPath.Count == 0) return;
-        
-        Vector2 curPos = RoundVec(transform.position);
-
-        if (currentPath[0].Target == curPos)
-        {
-            currentPath.RemoveAt(0);
-            return;
-        }
-        
-        Action currentAction = currentPath[0];
-
-        switch (currentAction.SateAction)
+        var action = actions[curIndex];
+        switch (action.StateAction)
         {
             case StateAction.move:
-                float dir = currentAction.Target.x < transform.position.x ? -1 : 1;
-                rb.velocity = new Vector2(dir * controller.enemyType.moveSpeed, rb.velocity.y);
-                
-                if (dir != 1 && isFacingRight)
-                    FlipSprite();
-                else if (dir == 1 && !isFacingRight)
-                    FlipSprite();
-                
-                break;
-            case StateAction.fall:
-                rb.velocity = new Vector2(0, rb.velocity.y);
+                HandleMove(action);
                 break;
             case StateAction.jump:
-                StartCoroutine(DoJump());
+                controller.Jump.Jump();
+                curIndex++;
+                break;
+            case StateAction.fall:
+                curIndex++;
+                break;
+            default:
+                curIndex++;
                 break;
         }
     }
 
-    IEnumerator DoJump()
+    private void HandleMove(Action action)
     {
-        yield return new WaitForSeconds(0.1f);
-        controller.Jump.Jump();
-        yield return new WaitForSeconds(1f);
+        Vector2 targetPos = action.Target;
+        Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
+        
+        FlipSprite(direction.x);
+        rb.velocity = new Vector2(direction.x * controller.enemyType.moveSpeed, rb.velocity.y);
+        
+        if (Vector2.Distance(transform.position, targetPos) < 0.1f)
+            curIndex++;
     }
 
-    private Vector2 RoundVec(Vector2 v)
+    private void FlipSprite(float directionX)
     {
-        return new Vector2(Mathf.FloorToInt(v.x), Mathf.FloorToInt(v.y));
-    }
-
-    public void FlipSprite()
-    {
-        controller.enemyType.isFacingRight = !controller.enemyType.isFacingRight;
-        controller.enemyType.facingDirection *= -1;
-        transform.Rotate(0f, 180f, 0f);
+        Vector3 scale = transform.localScale;
+        scale.x = Mathf.Abs(scale.x) * (directionX < 0 ? 1 : -1);
+        transform.localScale = scale;
     }
 }

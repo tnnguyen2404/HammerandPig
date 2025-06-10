@@ -17,11 +17,12 @@ public class PigChargeState : PigBaseState
 
     public override void UpdateState(PigController controller)
     {
-        
+        if (controller.CheckForAttackRange())
+            controller.SwitchState(controller.attackState);
     }
 
     public override void FixedUpdateState(PigController controller)
     {
-        controller.Movement.HandlePath();
+        controller.Movement.Movement();
     }
 }

@@ -28,7 +28,8 @@ public class PigController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
     
-    [SerializeField] private SetupFinding pathFinder;
+    [SerializeField] private SetupFinding setupFinding;
+    [SerializeField] private Find finder;
     public GameObject player;
     public GameObject alert;
     public Transform groundCheck;
@@ -53,11 +54,13 @@ public class PigController : MonoBehaviour
         StateMachine = new PigStateMachine();
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        setupFinding = GetComponent<SetupFinding>();
+        finder = GetComponent<Find>();
     }
     void Start()
     {
         StateMachine.Initialize(idleState, this);
-        Movement.Initialize(pathFinder, player);
+        Movement.Initialize(setupFinding, player);
     }
     void Update()
     {
