@@ -20,10 +20,10 @@ MonoBehaviour:
   isAttacked: 0
   facingDirection: 1
   moveSpeed: 2.5
-  groundCheckDistance: 0.33
+  groundCheckRadius: 0.33
   groundLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 8320
   detectRange: 3
   detectionWaitTime: 2
   whatIsDamageable:

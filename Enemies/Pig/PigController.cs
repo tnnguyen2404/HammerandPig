@@ -11,7 +11,7 @@ using Unity.VisualScripting;
 public class PigController : MonoBehaviour
 {
     public EnemyTypeSO enemyType;
-    public PlayerController playerController;
+    //public PlayerController playerController;
     
     public PigStateMachine StateMachine {get; private set;}
     
@@ -31,6 +31,7 @@ public class PigController : MonoBehaviour
     [SerializeField] private SetupFinding setupFinding;
     [SerializeField] private Find finder;
     public GameObject player;
+    
     public GameObject alert;
     public Transform groundCheck;
     public Transform attackHitBox;
@@ -60,6 +61,12 @@ public class PigController : MonoBehaviour
     void Start()
     {
         StateMachine.Initialize(idleState, this);
+        if (player == null)
+        {
+            player = GameObject.FindWithTag("Player");
+            if (player == null)
+                Debug.LogError("[PigController] No GameObject with tag 'Player' found!");
+        }
         Movement.Initialize(setupFinding, player);
     }
     void Update()

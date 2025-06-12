@@ -17,13 +17,13 @@ public class EnemyTypeSO : ScriptableObject
     public bool isAlive;
     public bool isFacingRight;
     public bool isAttacked;
-
+ 
     [Header("Movement")] 
     public int facingDirection;
     public float moveSpeed;
 
-    [Header("SurroundingsCheck")] 
-    public float groundCheckDistance;
+    [Header("GroundCheck")] 
+    public float groundCheckRadius;
     public LayerMask groundLayer;
     
     [Header("Player Detection State")]

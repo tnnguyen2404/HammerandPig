@@ -8,28 +8,30 @@ public class PigMovement : MonoBehaviour
     private Rigidbody2D rb;
     private PigController controller;
 
+    public Transform player;
+
     private SetupFinding setupFinding;
     private Find finder;
     private List<Action> actions = new List<Action>();
     private int curIndex;
     
     public bool isCharging;
+    
+    [SerializeField] private float recalcInterval = 0.5f;
+    private float recalcTimer;
 
     public void Initialize(SetupFinding setupFindingRef, GameObject targetRef)
     {
         setupFinding = setupFindingRef != null ? setupFindingRef : SetupFinding.Instance;
-        if (setupFindingRef != null)
-            Debug.Log("setupfinding is null");
         
-        finder = setupFinding != null ? setupFinding.GetComponent<Find>() : null;
-        if (finder != null)
-        {
+        finder = setupFinding == null ? GetComponent<Find>() : null;
+        
+        if (finder == null)
             finder = FindObjectOfType<Find>();
-            if (finder != null)
-                Debug.Log("finder is null");
-        }
         
         target = targetRef;
+        
+        
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
     }
@@ -38,10 +40,19 @@ public class PigMovement : MonoBehaviour
     {
         actions = finder.Findd(transform.position, target.transform.position);
         curIndex = 0;
+        recalcTimer = recalcInterval;
     }
 
     public void Movement()
     {
+        recalcTimer -= Time.fixedDeltaTime;
+        if (recalcTimer <= 0f)
+        {
+            actions = finder.Findd(transform.position, target.transform.position);
+            curIndex = 0;
+            recalcTimer = recalcInterval;
+        }
+        
         if (actions == null || curIndex >= actions.Count) return;
         
         var action = actions[curIndex];
@@ -51,8 +62,7 @@ public class PigMovement : MonoBehaviour
                 HandleMove(action);
                 break;
             case StateAction.jump:
-                controller.Jump.Jump();
-                curIndex++;
+                HandleJump(action);
                 break;
             case StateAction.fall:
                 curIndex++;
@@ -73,6 +83,22 @@ public class PigMovement : MonoBehaviour
         
         if (Vector2.Distance(transform.position, targetPos) < 0.1f)
             curIndex++;
+    }
+
+    private void HandleJump(Action action)
+    {
+        Vector2 landingPos = action.Target;
+        bool groundCheck = Physics2D.OverlapCircle(landingPos, controller.enemyType.groundCheckRadius
+            , controller.enemyType.groundLayer);
+        
+        if (!groundCheck)
+        {
+            curIndex++;
+            return;
+        }
+        
+        controller.Jump.Jump(action.ForceJump);
+        curIndex++;
     }
 
     private void FlipSprite(float directionX)
