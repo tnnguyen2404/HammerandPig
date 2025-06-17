@@ -7,16 +7,18 @@ public class MusicManager : MonoBehaviour
     [SerializeField] MusicLibrary musicLibrary;
     [SerializeField] AudioSource musicSource;
     
-    public static MusicManager Instance;
+    public static MusicManager Instance {get; private set;}
 
     void Awake()
     {
         if (Instance == null)
-            Destroy(gameObject);
-        else
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
         }
     }
 

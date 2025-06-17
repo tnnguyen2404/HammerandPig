@@ -13,7 +13,7 @@ public class SoundLibrary : MonoBehaviour
 {
     public SoundEffect[] soundEffects;
     
-    public AudioClip GetSound(string ame)
+    public AudioClip GetSound(string name)
     {
         foreach (var soundEffect in soundEffects)
         {
