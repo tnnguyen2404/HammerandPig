@@ -12,15 +12,16 @@ public class PlayButton : BaseButton
     protected override void OnButtonClick()
     {
         base.OnButtonClick();
-        menuPanel.FlyOutToRight();
+        LevelManager.Instance.LoadScene("Level 1", "CircleWipe");
+        MusicManager.Instance.PlayMusic("Level 1");
+        
+        /*menuPanel.FlyOutToRight();
         titlePanel.FlyOutToLeft();
-        coroutineRunner.StartCoroutine(WaitForUIAnimation(1f));
+        coroutineRunner.StartCoroutine(WaitForUIAnimation(1f));*/
     }
 
-    IEnumerator WaitForUIAnimation(float delayTime)
+    /*IEnumerator WaitForUIAnimation(float delayTime)
     {
         yield return new WaitForSeconds(delayTime);
-        SceneManager.LoadScene("Level 1");
-        MusicManager.Instance.PlayMusic("Level 1");
-    }
+    }*/
 }

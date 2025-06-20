@@ -11,19 +11,4 @@ public class MainMenu : MonoBehaviour
         menuPanel.FlyInFromLeft();
         titlePanel.FlyInFromRight();
     }
-
-    public void PlayGame()
-    {
-         
-    }
-
-    public void Settings()
-    {
-        
-    }
-    
-    public void Quit()
-    {
-        Application.Quit();
-    }
 }
