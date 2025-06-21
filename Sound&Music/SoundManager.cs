@@ -20,6 +20,8 @@ public class SoundManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        
+        audioSource.volume = PlayerPrefs.GetFloat("Volume", 1f);
     }
 
     public void PlaySound3D(AudioClip clip, Vector3 pos)
@@ -37,4 +39,15 @@ public class SoundManager : MonoBehaviour
     {
         audioSource.PlayOneShot(soundLibrary.GetSound(soundName));
     }
+
+    public void StopSfx()
+    {
+        audioSource.mute = true;
+    }
+
+    public void ResumeSfx()
+    {
+        audioSource.mute = false;
+    }
+    
 }

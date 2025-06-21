@@ -21,6 +21,6 @@ public class LevelButton : BaseButton
     IEnumerator WaitForUIAnimation(float delayTime)
     {
         yield return new WaitForSeconds(delayTime);
-        levelPanel.Rotate();
+        levelPanel.PopIn();
     }
 }

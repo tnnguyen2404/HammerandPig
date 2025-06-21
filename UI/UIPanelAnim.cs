@@ -76,12 +76,12 @@ public class UIPanelAnim : MonoBehaviour
             .OnComplete(() => gameObject.SetActive(false));
     }
 
-    public void Rotate()
+    public void PopIn()
     {
+        transform.localScale = Vector3.zero;
         gameObject.SetActive(true);
-        transform.DORotate(new Vector3(0, 0, 360), 1f, RotateMode.FastBeyond360)
-            .SetEase(Ease.OutQuart)
-            .SetLoops(1);
+        transform.DOScale(new Vector3(1, 1, 1), 0.5f)
+            .SetEase(Ease.OutBounce);
     }
 
     public void PopOut()

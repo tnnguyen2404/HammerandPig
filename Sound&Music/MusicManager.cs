@@ -20,6 +20,8 @@ public class MusicManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        
+        musicSource.volume = PlayerPrefs.GetFloat("Volume", 1f);
     }
 
     public void PlayMusic(string trackName, float fadeTime = 0.5f)
@@ -30,10 +32,11 @@ public class MusicManager : MonoBehaviour
     IEnumerator AnimateMusicCrossFade(AudioClip nextTrack, float fadeTime)
     {
         float percent = 0f;
+        float targetVolume = PlayerPrefs.GetFloat("Volume", 1f);
         while (percent < 1)
         {
             percent += Time.deltaTime * 1/ fadeTime;
-            musicSource.volume = Mathf.Lerp(1f, 0f, percent);
+            musicSource.volume = Mathf.Lerp(targetVolume, 0f, percent);
             yield return null;
         }
         
@@ -44,8 +47,29 @@ public class MusicManager : MonoBehaviour
         while (percent < 1)
         {
             percent += Time.deltaTime * 1/ fadeTime;
-            musicSource.volume = Mathf.Lerp(0f, 1f, percent);
+            musicSource.volume = Mathf.Lerp(0f, targetVolume, percent);
             yield return null;
         }
+    }
+
+    public void StopMusic()
+    {
+        musicSource.Stop();
+    }
+
+    public void ResumeMusic()
+    {
+        musicSource.Play();
+    }
+
+    public void SetVolume(float value)
+    {
+        musicSource.volume = value;
+        PlayerPrefs.SetFloat("Volume", value);
+    }
+
+    public float GetVolume()
+    {
+        return musicSource.volume;
     }
 }

@@ -7,6 +7,7 @@ public class MainMenu : MonoBehaviour
     
     private void Start()
     {
+        Application.targetFrameRate = 120;
         MusicManager.Instance.PlayMusic("Main Menu");
         menuPanel.FlyInFromLeft();
         titlePanel.FlyInFromRight();
