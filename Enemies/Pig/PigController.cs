@@ -67,7 +67,7 @@ public class PigController : MonoBehaviour
             if (player == null)
                 Debug.LogError("[PigController] No GameObject with tag 'Player' found!");
         }
-        Movement.Initialize(setupFinding, player);
+        Movement.Initialize(setupFinding);
     }
     void Update()
     {

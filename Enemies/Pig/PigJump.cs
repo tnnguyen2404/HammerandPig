@@ -23,14 +23,17 @@ public class PigJump : MonoBehaviour
     
     public bool CheckForGround()
     {
-        isGrounded = Physics2D.Raycast(controller.groundCheck.position, Vector2.down,
+        RaycastHit2D hit = Physics2D.Raycast(controller.groundCheck.position, Vector2.down,
             controller.enemyType.groundCheckRadius, controller.enemyType.groundLayer);
+
+        Debug.DrawLine(controller.groundCheck.position, controller.groundCheck.position + Vector3.down * controller.enemyType.groundCheckRadius, hit ? Color.green : Color.red);
+
+        isGrounded = hit;
         return isGrounded;
     }
 
     public void Jump(Vector2 force)
     {
-        if (isGrounded)
-            rb.AddForce(force);
+        rb.AddForce(force, ForceMode2D.Impulse);
     }
 }

@@ -20,7 +20,7 @@ MonoBehaviour:
   isAttacked: 0
   facingDirection: 1
   moveSpeed: 2.5
-  groundCheckRadius: 0.33
+  groundCheckRadius: 0.1
   groundLayer:
     serializedVersion: 2
     m_Bits: 8320
