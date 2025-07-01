@@ -1,184 +1,158 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PigMovement : MonoBehaviour
 {
+    [Header("Movement Settings")]
+    public float moveSpeed = 2f;
+    public LayerMask groundLayer;
+    public Transform groundCheck;
+    public bool smartJump = false; // Only jump if needed
+
+    [Header("Jump Settings")]
+    public float minJumpTime = 0.3f;
+    public float maxJumpTime = 0.7f;
+    public float jumpExtraHeight = 0.5f;
+    public float jumpForce = 12f; // Fallback force if needed
+
     private Rigidbody2D rb;
+    private List<Node> curPath = null;
+    private int curNodeIndex = 0;
+    private Transform player;
     private PigController controller;
+    private bool isJumping = false;
 
-    private SetupFinding setupFinding;
-    private Find finder;
-    private List<Action> actions = new List<Action>();
-    private int curIndex = 0;
-
-    private Vector2 jumpTarget;
-    private float jumpTolerance = 0.1f;
-    private bool isFollowingPath = false;
-
-    // Jump alignment/delay state
-    private bool waitingForJump = false;
-    private Coroutine jumpCoroutine;
-
-    public void Initialize(SetupFinding setupFindingRef)
+    void Awake()
     {
-        setupFinding = setupFindingRef != null ? setupFindingRef : SetupFinding.Instance;
-        finder = setupFinding == null ? GetComponent<Find>() : setupFinding.GetComponent<Find>();
-        if (finder == null)
-            finder = FindObjectOfType<Find>();
         rb = GetComponent<Rigidbody2D>();
         controller = GetComponent<PigController>();
     }
 
-    void Update()
+    public void SetPath(List<Node> path)
     {
-        if (!isFollowingPath) return;
+        curPath = path;
+        curNodeIndex = (path != null && path.Count > 1) ? 1 : 0;
+        isJumping = false;
+    }
 
-        // If currently waiting to land after a jump, don't process next actions
-        if (controller.Jump.isJumping)
+    public void SetPlayer(Transform playerTransform)
+    {
+        player = playerTransform;
+    }
+
+    public void FollowPath()
+    {
+        if (curPath == null || curNodeIndex >= curPath.Count) return;
+
+        Node targetNode = curPath[curNodeIndex];
+        if (targetNode == null) return;
+
+        // Use explicit Vector2 construction to avoid ambiguity
+        Vector2 pigPos = new Vector2(transform.position.x, transform.position.y);
+        Vector2 nodePos = new Vector2(targetNode.transform.position.x, targetNode.transform.position.y);
+        Vector2 toNode = nodePos - pigPos;
+
+        // If this is not the last node, and we're close, immediately advance
+        if (curNodeIndex < curPath.Count - 1 && toNode.magnitude < 0.2f)
         {
-            // Only finish jump if both grounded and near target
-            if (controller.Jump.isGrounded &&
-                Mathf.Abs(transform.position.x - jumpTarget.x) < jumpTolerance &&
-                Mathf.Abs(transform.position.y - jumpTarget.y) < 0.12f) // tighten for platformers
+            curNodeIndex++;
+            isJumping = false; // Ready for next jump if needed
+            targetNode = curPath[curNodeIndex];
+            nodePos = new Vector2(targetNode.transform.position.x, targetNode.transform.position.y);
+            toNode = nodePos - pigPos;
+        }
+
+        // SMART JUMP: Only jump if needed
+        if (smartJump && IsPlayerOnSamePlatform())
+        {
+            Walk(toNode.x);
+            return;
+        }
+
+        // Jump if needed
+        if (curNodeIndex > 0 && curPath[curNodeIndex - 1].isJumpPoint)
+        {
+            if (IsGrounded() && !isJumping)
             {
-                controller.Jump.isJumping = false;
-                curIndex++;
+                RealisticJumpTo(targetNode.transform.position);
+                isJumping = true;
             }
+        }
+        else
+        {
+            Walk(toNode.x);
+        }
+
+        FlipSprite(player.transform.position.x - transform.position.x);
+    }
+
+    private void Walk(float xDir)
+    {
+        rb.velocity = new Vector2(Mathf.Sign(xDir) * moveSpeed, rb.velocity.y);
+    }
+
+    /// <summary>
+    /// Launch the pig with a velocity that will land on the target node, with robust zero-checking.
+    /// </summary>
+    public void RealisticJumpTo(Vector3 targetPos)
+    {
+        Vector2 startPos = new Vector2(transform.position.x, transform.position.y);
+        Vector2 endPos = new Vector2(targetPos.x, targetPos.y);
+        float gravity = Mathf.Abs(Physics2D.gravity.y);
+
+        float dx = endPos.x - startPos.x;
+        float dy = (endPos.y + jumpExtraHeight) - startPos.y;
+
+        float time = Mathf.Clamp(Mathf.Abs(dx) / 5f, minJumpTime, maxJumpTime);
+
+        // Avoid division by zero or near-zero
+        if (Mathf.Approximately(time, 0f) || Mathf.Abs(dx) < 0.01f)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce); // fallback simple jump
             return;
         }
 
-        // Don't process next actions if currently in the jump alignment delay
-        if (waitingForJump)
-            return;
+        float vx = dx / time;
+        float vy = (dy + 0.5f * gravity * time * time) / time;
 
-        if (curIndex >= actions.Count)
+        // Avoid NaN/Infinity velocities
+        if (float.IsNaN(vx) || float.IsInfinity(vx) || float.IsNaN(vy) || float.IsInfinity(vy))
         {
-            StopPath();
-            return;
-        }
-
-        ExecuteCurrentAction();
-    }
-
-    public void MoveTo(Vector2 destination)
-    {
-        Vector2 start = new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y));
-        actions = finder.Findd(start, destination);
-        curIndex = 0;
-        isFollowingPath = true;
-        controller.Jump.isJumping = false;
-        waitingForJump = false;
-        if (jumpCoroutine != null)
-        {
-            StopCoroutine(jumpCoroutine);
-            jumpCoroutine = null;
-        }
-    }
-
-    public void StopPath()
-    {
-        isFollowingPath = false;
-        actions.Clear();
-        curIndex = 0;
-        controller.Jump.isJumping = false;
-        waitingForJump = false;
-        if (jumpCoroutine != null)
-        {
-            StopCoroutine(jumpCoroutine);
-            jumpCoroutine = null;
-        }
-        rb.velocity = new Vector2(0, rb.velocity.y);
-    }
-
-    public bool isMoving()
-    {
-        return isFollowingPath;
-    }
-
-    void ExecuteCurrentAction()
-    {
-        if (curIndex >= actions.Count)
-        {
-            StopPath();
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             return;
         }
 
-        var action = actions[curIndex];
-
-        switch (action.StateAction)
-        {
-            case StateAction.move:
-                // Move horizontally towards target.x
-                float dir = Mathf.Sign(action.Target.x - transform.position.x);
-                rb.velocity = new Vector2(dir * controller.enemyType.moveSpeed, rb.velocity.y);
-                FlipSprite(dir);
-
-                // Arrived at target X?
-                if (Mathf.Abs(transform.position.x - action.Target.x) < 0.05f)
-                {
-                    rb.velocity = new Vector2(0, rb.velocity.y);
-                    transform.position = new Vector3(action.Target.x, transform.position.y, transform.position.z);
-                    curIndex++;
-                }
-                break;
-
-            case StateAction.jump:
-                // 1. Move to precise jump start X (action.Position.x)
-                if (!controller.Jump.isJumping && controller.Jump.isGrounded)
-                {
-                    if (Mathf.Abs(transform.position.x - action.Position.x) > 0.05f)
-                    {
-                        // Move to align with jump start X
-                        float moveDir = Mathf.Sign(action.Position.x - transform.position.x);
-                        rb.velocity = new Vector2(moveDir * controller.enemyType.moveSpeed, rb.velocity.y);
-                        FlipSprite(moveDir);
-                    }
-                    else
-                    {
-                        // Snap X exactly to jump start
-                        transform.position = new Vector3(action.Position.x, transform.position.y, transform.position.z);
-                        rb.velocity = Vector2.zero;
-
-                        // Wait a moment for stability, then jump
-                        if (!waitingForJump)
-                        {
-                            jumpCoroutine = StartCoroutine(DelayedJump(action.ForceJump, action.Target, 0.1f)); // 0.1–0.2s for best results
-                        }
-                    }
-                }
-                break;
-
-            case StateAction.fall:
-                // Wait until landed at target position
-                if (Mathf.Abs(transform.position.y - action.Target.y) < 0.1f && controller.Jump.isGrounded)
-                {
-                    curIndex++;
-                }
-                else
-                {
-                    // You can move horizontally if needed to reach the fall target X
-                    float fallDir = Mathf.Sign(action.Target.x - transform.position.x);
-                    rb.velocity = new Vector2(fallDir * controller.enemyType.moveSpeed, rb.velocity.y);
-                    FlipSprite(fallDir);
-                }
-                break;
-
-            default:
-                curIndex++;
-                break;
-        }
+        rb.velocity = new Vector2(vx, vy);
     }
 
-    private IEnumerator DelayedJump(Vector2 force, Vector2 target, float delay)
+    public bool IsGrounded()
     {
-        waitingForJump = true;
-        yield return new WaitForSeconds(delay);
-        controller.Jump.Jump(force);
-        controller.Jump.isJumping = true;
-        jumpTarget = target;
-        waitingForJump = false;
-        jumpCoroutine = null;
+        return Physics2D.OverlapCircle(groundCheck.position, 0.1f, groundLayer);
+    }
+
+    /// <summary>
+    /// Checks if player is on the same platform (same Y, and no gap between pig and player)
+    /// </summary>
+    private bool IsPlayerOnSamePlatform()
+    {
+        if (player == null) return false;
+        float yDiff = Mathf.Abs(transform.position.y - player.position.y);
+        if (yDiff > 0.15f) return false;
+
+        // Check for ground under every step between pig and player
+        Vector2 dir = (player.position.x > transform.position.x) ? Vector2.right : Vector2.left;
+        Vector2 checkPos = new Vector2(transform.position.x, transform.position.y);
+        float distance = Mathf.Abs(transform.position.x - player.position.x);
+        int steps = Mathf.CeilToInt(distance / 0.2f);
+
+        for (int i = 0; i < steps; i++)
+        {
+            checkPos += dir * 0.2f;
+            Vector2 below = new Vector2(checkPos.x, checkPos.y - 0.1f);
+            if (!Physics2D.OverlapCircle(below, 0.15f, groundLayer))
+                return false; // found a gap!
+        }
+        return true; // all ground between pig and player
     }
 
     private void FlipSprite(float directionX)

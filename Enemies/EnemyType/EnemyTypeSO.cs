@@ -11,7 +11,6 @@ public class EnemyTypeSO : ScriptableObject
     
     [Header("Stats")] 
     public int maxHealth;
-    public float jumpForce;
     
     [Header("Boolean")]
     public bool isAlive;
@@ -21,6 +20,10 @@ public class EnemyTypeSO : ScriptableObject
     [Header("Movement")] 
     public int facingDirection;
     public float moveSpeed;
+    public float jumpForce;
+    public float minJumpTime;
+    public float maxJumpTime;
+    public float jumpExtraHeight;
 
     [Header("GroundCheck")] 
     public float groundCheckRadius;

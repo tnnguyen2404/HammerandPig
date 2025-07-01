@@ -11,7 +11,6 @@ using Unity.VisualScripting;
 public class PigController : MonoBehaviour
 {
     public EnemyTypeSO enemyType;
-    //public PlayerController playerController;
     
     public PigStateMachine StateMachine {get; private set;}
     
@@ -67,7 +66,6 @@ public class PigController : MonoBehaviour
             if (player == null)
                 Debug.LogError("[PigController] No GameObject with tag 'Player' found!");
         }
-        Movement.Initialize(setupFinding);
     }
     void Update()
     {

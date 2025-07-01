@@ -14,13 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyName: Pig
   maxHealth: 3
-  jumpForce: 2.5
   isAlive: 0
   isFacingRight: 1
   isAttacked: 0
   facingDirection: 1
   moveSpeed: 2.5
-  groundCheckRadius: 0.1
+  jumpForce: 2.5
+  minJumpTime: 0.3
+  maxJumpTime: 0.7
+  jumpExtraHeight: 0.2
+  groundCheckRadius: 0.2
   groundLayer:
     serializedVersion: 2
     m_Bits: 8320

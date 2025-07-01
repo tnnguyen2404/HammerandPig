@@ -4,18 +4,17 @@ using UnityEngine.Tilemaps;
 
 public class NodeGenerator : MonoBehaviour
 {
+    public LayerMask groundLayer;
+    
     [Header("Tilemaps")]
-    public Tilemap groundTilemap;           // Regular ground/platforms
-    public Tilemap oneWayTilemap;           // One-way platforms (optional, can leave null if not used)
+    public Tilemap groundTilemap;         
+    public Tilemap oneWayTilemap; 
 
     [Header("Node Settings")]
-    public GameObject nodePrefab;           // Node prefab with Node script
-    public float nodeSpacing = 1f;          // Minimum X distance between nodes on the same platform
-    public float jumpHeight = 3f;           // Enemy jump height
-    public float jumpDistance = 3f;         // Enemy jump max X distance
-
-    [Header("Layer Mask")]
-    public LayerMask groundMask;            // For raycast/jump checks
+    public GameObject nodePrefab;           
+    public float nodeSpacing = 1f;          
+    public float jumpHeight = 3f;           
+    public float jumpDistance = 3f;         
     
     [ContextMenu("Generate Node")]
 
@@ -24,8 +23,7 @@ public class NodeGenerator : MonoBehaviour
         ClearNodes();
 
         List<Node> nodes = new List<Node>();
-
-        // Gather bounds of all tilemaps used
+        
         BoundsInt bounds = groundTilemap.cellBounds;
         if (oneWayTilemap != null)
         {
@@ -34,71 +32,78 @@ public class NodeGenerator : MonoBehaviour
             bounds.yMin = Mathf.Min(bounds.yMin, oneWayTilemap.cellBounds.yMin);
             bounds.yMax = Mathf.Max(bounds.yMax, oneWayTilemap.cellBounds.yMax);
         }
-
-        // STEP 1: Place nodes at platform edges & on one-way platforms
+        
         for (int y = bounds.yMin; y <= bounds.yMax; y++)
+{
+    for (int x = bounds.xMin; x <= bounds.xMax; x++)
+    {
+        Vector3Int pos = new Vector3Int(x, y, 0);
+        bool isGround = groundTilemap.HasTile(pos);
+        bool isOneWay = oneWayTilemap != null && oneWayTilemap.HasTile(pos);
+
+        bool airAbove =
+            (!groundTilemap.HasTile(new Vector3Int(pos.x, pos.y + 1, pos.z))) &&
+            (oneWayTilemap == null || !oneWayTilemap.HasTile(new Vector3Int(pos.x, pos.y + 1, pos.z)));
+
+        if ((isGround || isOneWay) && airAbove)
         {
-            for (int x = bounds.xMin; x <= bounds.xMax; x++)
+            Vector3 worldPos = groundTilemap.CellToWorld(pos) + new Vector3(0.5f, 1f, 0f);
+
+            // Edge check: left or right is empty
+            bool leftEmpty = !(groundTilemap.HasTile(new Vector3Int(x - 1, y, 0)) ||
+                              (oneWayTilemap != null && oneWayTilemap.HasTile(new Vector3Int(x - 1, y, 0))));
+            bool rightEmpty = !(groundTilemap.HasTile(new Vector3Int(x + 1, y, 0)) ||
+                              (oneWayTilemap != null && oneWayTilemap.HasTile(new Vector3Int(x + 1, y, 0))));
+
+            // Check if a node is already placed at this position
+            bool nodeExists = false;
+            foreach (var node in nodes)
             {
-                Vector3Int pos = new Vector3Int(x, y, 0);
-                bool isGround = groundTilemap.HasTile(pos);
-                bool isOneWay = oneWayTilemap != null && oneWayTilemap.HasTile(pos);
-                
-                bool airAbove = 
-                    (!groundTilemap.HasTile(new Vector3Int(pos.x, pos.y + 1, pos.z))) &&
-                    (oneWayTilemap == null || !oneWayTilemap.HasTile(new Vector3Int(pos.x, pos.y + 1, pos.z)));
-
-                if ((isGround || isOneWay) && airAbove)
+                if (Vector2.Distance(node.transform.position, worldPos) < 0.2f)
                 {
-                    // Only put nodes at walkable places: on top of ground/oneway tiles
-                    Vector3 worldPos = groundTilemap.CellToWorld(pos) + new Vector3(0.5f, 1.5f, 0f);
-
-                    // Place at left and right edge, or at a certain interval along the platform
-                    bool leftEmpty = !(groundTilemap.HasTile(new Vector3Int(x - 1, y, 0)) ||
-                                      (oneWayTilemap != null && oneWayTilemap.HasTile(new Vector3Int(x - 1, y, 0))));
-                    bool rightEmpty = !(groundTilemap.HasTile(new Vector3Int(x + 1, y, 0)) ||
-                                      (oneWayTilemap != null && oneWayTilemap.HasTile(new Vector3Int(x + 1, y, 0))));
-
-                    bool placeNode = false;
-
-                    // Place at platform edges
-                    if (leftEmpty || rightEmpty)
-                        placeNode = true;
-
-                    // Also place at intervals along the platform
-                    if (!placeNode && x % Mathf.RoundToInt(nodeSpacing) == 0)
-                        placeNode = true;
-
-                    if (placeNode)
-                    {
-                        GameObject nodeGO = Instantiate(nodePrefab, worldPos, Quaternion.identity, this.transform);
-                        Node node = nodeGO.GetComponent<Node>();
-                        nodes.Add(node);
-                    }
+                    nodeExists = true;
+                    break;
                 }
             }
-        }
 
-        // STEP 2: Connect horizontally-adjacent nodes (walkable connections)
+            bool placeNode = false;
+
+            // Always place at edges
+            if (leftEmpty || rightEmpty)
+                placeNode = true;
+
+            // Also place at regular interval, but don't duplicate
+            if (!placeNode && (x - bounds.xMin) % Mathf.RoundToInt(nodeSpacing) == 0)
+                placeNode = true;
+
+            if (placeNode && !nodeExists)
+            {
+                GameObject nodeGO = Instantiate(nodePrefab, worldPos, Quaternion.identity, this.transform);
+                Node node = nodeGO.GetComponent<Node>();
+                nodes.Add(node);
+            }
+        }
+    }
+}
+
+        
         float connectDist = nodeSpacing + 0.2f;
         for (int i = 0; i < nodes.Count; i++)
         {
             for (int j = 0; j < nodes.Count; j++)
             {
                 if (i == j) continue;
-                // On same height & close in X, connect
                 if (Mathf.Abs(nodes[i].transform.position.y - nodes[j].transform.position.y) < 0.2f &&
-                    Mathf.Abs(nodes[i].transform.position.x - nodes[j].transform.position.x) <= connectDist)
+                    Vector2.Distance(nodes[i].transform.position, nodes[j].transform.position) <= connectDist)
                 {
-                    nodes[i].connections.Add(nodes[j]);
+                    if (!nodes[i].connections.Contains(nodes[j]))
+                        nodes[i].connections.Add(nodes[j]);
                 }
             }
         }
-
-        // STEP 3: Jump links (from edge nodes, up and down)
+        
         foreach (var node in nodes)
         {
-            // Search for possible landing nodes within jump range (up or down)
             foreach (var target in nodes)
             {
                 if (node == target) continue;
@@ -106,19 +111,43 @@ public class NodeGenerator : MonoBehaviour
                 if (Mathf.Abs(delta.x) > 0.2f && Mathf.Abs(delta.x) <= jumpDistance &&
                     delta.y > 0.1f && delta.y <= jumpHeight)
                 {
-                    // Optional: Linecast to check if jump is clear (no walls/ceilings in the way)
-                    
                     node.isJumpPoint = true;
                     node.jumpTarget = target;
-                    Debug.Log($"Jump created from {node.transform.position} to {target.transform.position}");
-                    
                 }
-                // You can add drop-down (fall through one-way) as another connection if wanted:
-                // if (delta.y < -0.1f && Mathf.Abs(delta.x) < jumpDistance && ... )
+            }
+        }
+        
+        float dropMaxDistance = 6f; // max distance to look for a platform below
+
+        foreach (var node in nodes)
+        {
+            Vector2 dropOrigin = node.transform.position + Vector3.down * 0.1f;
+            RaycastHit2D hit = Physics2D.Raycast(dropOrigin, Vector2.down, dropMaxDistance, groundLayer);
+
+            if (hit.collider != null)
+            {
+                // Find the node closest to hit.point, horizontally aligned
+                Node dropTarget = null;
+                float closest = 0.5f;
+                foreach (var candidate in nodes)
+                {
+                    if (Mathf.Abs(candidate.transform.position.x - node.transform.position.x) < closest &&
+                        candidate.transform.position.y < node.transform.position.y - 0.2f && // below
+                        Mathf.Abs(candidate.transform.position.y - hit.point.y) < 0.5f)
+                    {
+                        dropTarget = candidate;
+                        closest = Mathf.Abs(candidate.transform.position.x - node.transform.position.x);
+                    }
+                }
+
+                if (dropTarget != null)
+                {
+                    node.connections.Add(dropTarget);
+                    // Optionally: mark as "isDropPoint" if you want special logic
+                }
             }
         }
 
-        Debug.Log("Nodes generated: " + nodes.Count);
     }
 
     public void ClearNodes()

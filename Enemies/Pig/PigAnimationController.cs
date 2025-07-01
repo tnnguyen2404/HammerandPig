@@ -17,7 +17,7 @@ public class PigAnimationController : MonoBehaviour
 
     void Update()
     {
-        anim.SetBool("Charge", controller.Movement.isMoving());
+        //anim.SetBool("Charge", controller.Movement.isMoving());
         anim.SetBool("Attack", controller.Combat.isAttacking);
         anim.SetBool("Death", controller.enemyType.isAlive);
 

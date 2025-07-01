@@ -18,6 +18,24 @@ public class AStarManager : MonoBehaviour
             Destroy(this);
         }
     }
+    
+    public Node GetClosestNode(Vector2 position)
+    {
+        Node[] nodes = GameObject.FindObjectsOfType<Node>();
+        Node closest = null;
+        float minDist = Mathf.Infinity;
+        foreach (var n in nodes)
+        {
+            float dist = Vector2.Distance(n.transform.position, position);
+            if (dist < minDist)
+            {
+                minDist = dist;
+                closest = n;
+            }
+        }
+        return closest;
+    }
+
 
     public List<Node> GeneratePath(Node start, Node end)
     {
@@ -76,26 +94,6 @@ public class AStarManager : MonoBehaviour
                     if (!openSet.Contains(connectedNode))
                     {
                         openSet.Add(connectedNode);
-                    }
-                }
-            }
-
-            if (curNode.isJumpPoint && curNode.jumpTarget != null)
-            {
-                Node jumpNode = curNode.jumpTarget;
-                
-                float jumpCost = Vector2.Distance(curNode.transform.position, jumpNode.transform.position);
-                float heldGScore = curNode.gScore + jumpCost;
-
-                if (heldGScore < jumpNode.gScore)
-                {
-                    jumpNode.gScore = heldGScore;
-                    jumpNode.cameFrom = curNode;
-                    jumpNode.hScore = Vector2.Distance(jumpNode.transform.position, end.transform.position);
-
-                    if (!openSet.Contains(jumpNode))
-                    {
-                        openSet.Add(jumpNode);
                     }
                 }
             }

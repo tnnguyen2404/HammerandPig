@@ -1,48 +1,39 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PigChargeState : PigBaseState
 {
-    private float repathTimer = 0f;
-    private float repathInterval = 0.3f;
-    
+    private float repathTimer;
+    private const float repathInterval = 0.5f;
+
     public override void EnterState(PigController controller)
     {
-        repathTimer = 0f;
-        PathToPlayer(controller);
+        UpdatePath(controller);
+        repathTimer = repathInterval;
     }
 
-    public override void ExitState(PigController controller)
-    {
-       controller.Movement.StopPath();
-    }
+    public override void ExitState(PigController controller) { }
 
     public override void UpdateState(PigController controller)
     {
-        repathTimer += Time.deltaTime;
-        if (repathTimer >= repathInterval)
+        repathTimer -= Time.deltaTime;
+        if (repathTimer <= 0f)
         {
-            repathTimer = 0f;
-            if (!controller.Jump.isJumping && controller.Jump.isGrounded)
-                PathToPlayer(controller);
+            UpdatePath(controller);
+            repathTimer = repathInterval;
         }
-        
-        if (controller.CheckForAttackRange())
-            controller.SwitchState(controller.attackState);
+
+        controller.Movement.FollowPath();
     }
 
-    public override void FixedUpdateState(PigController controller)
+    public override void FixedUpdateState(PigController controller) { }
+
+    private void UpdatePath(PigController controller)
     {
-        
-    }
-    
-    private void PathToPlayer(PigController controller)
-    {
-        Vector2 playerPos = new Vector2(
-            Mathf.Round(controller.player.transform.position.x),
-            Mathf.Round(controller.player.transform.position.y)
-        );
-        controller.Movement.MoveTo(playerPos);
+        Node start = AStarManager.Instance.GetClosestNode(controller.transform.position);
+        Node end = AStarManager.Instance.GetClosestNode(controller.player.transform.position);
+        List<Node> path = AStarManager.Instance.GeneratePath(start, end);
+        controller.Movement.SetPlayer(controller.player.transform);
+        controller.Movement.SetPath(path);
     }
 }

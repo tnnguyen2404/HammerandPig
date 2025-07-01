@@ -17,18 +17,19 @@ public class Node : MonoBehaviour
     void OnDrawGizmos()
     {
         // Draw walk connections in green
-        Gizmos.color = Color.blue;
+        Gizmos.color = Color.green;
         foreach (var n in connections)
         {
-            if (n != null)
+            if (n != null && Mathf.Approximately(n.transform.position.y, transform.position.y))
                 Gizmos.DrawLine(transform.position, n.transform.position);
         }
-        // Draw jump target in red
-        if (isJumpPoint && jumpTarget != null)
+        // Draw vertical (jump/fall) connections in red
+        Gizmos.color = Color.red;
+        foreach (var n in connections)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(transform.position, jumpTarget.transform.position);
-            Gizmos.DrawSphere(jumpTarget.transform.position, 0.1f);
+            if (n != null && !Mathf.Approximately(n.transform.position.y, transform.position.y))
+                Gizmos.DrawLine(transform.position, n.transform.position);
         }
     }
+
 }
