@@ -2,34 +2,59 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Node : MonoBehaviour
+public enum NodeType
 {
-    public Node cameFrom;
-    public Node jumpTarget;
-    public List<Node> connections = new List<Node>();
-    
-    public float gScore;
-    public float hScore;
+    Walkable,
+    JumpPoint,
+    DropPoint
+}
 
-    public bool isJumpPoint;
-    public float FScore() => gScore + hScore;
+public class Node : IHeapItem<Node>
+{
+    public NodeType type;
+    public Vector3 worldPosition;
+    public int gridX;
+    public int gridY;
 
-    void OnDrawGizmos()
+    public int gCost;
+    public int hCost;
+    public Node parent;
+    public bool jumpToNode;
+
+    public List<Node> walkNeighbours;
+    public List<Node> jumpNeighbours;
+
+    int heapIndex;
+
+    public Node(NodeType _type, Vector3 _worldPos, int _gridX, int _gridY)
     {
-        // Draw walk connections in green
-        Gizmos.color = Color.green;
-        foreach (var n in connections)
-        {
-            if (n != null && Mathf.Approximately(n.transform.position.y, transform.position.y))
-                Gizmos.DrawLine(transform.position, n.transform.position);
-        }
-        // Draw vertical (jump/fall) connections in red
-        Gizmos.color = Color.red;
-        foreach (var n in connections)
-        {
-            if (n != null && !Mathf.Approximately(n.transform.position.y, transform.position.y))
-                Gizmos.DrawLine(transform.position, n.transform.position);
-        }
+        type = _type;
+        worldPosition = _worldPos;
+        gridX = _gridX;
+        gridY = _gridY;
+
+        walkNeighbours = new List<Node>();
+        jumpNeighbours = new List<Node>();
     }
 
+    public int fCost
+    {
+        get { return gCost + hCost; }
+    }
+
+    public int HeapIndex
+    {
+        get { return heapIndex; }
+        set { heapIndex = value; }
+    }
+
+    public int CompareTo(Node other)
+    {
+        int compare = fCost.CompareTo(other.fCost);
+        if (compare == 0)
+        {
+            compare = hCost.CompareTo(other.hCost);
+        }
+        return -compare; // Min-heap: lower fCost comes first
+    }
 }
