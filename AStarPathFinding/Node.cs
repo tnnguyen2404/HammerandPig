@@ -19,7 +19,7 @@ public class Node : IHeapItem<Node>
     public int gCost;
     public int hCost;
     public Node parent;
-    public bool jumpToNode;
+    public bool jumpNode;
 
     public List<Node> walkNeighbours;
     public List<Node> jumpNeighbours;
@@ -37,15 +37,12 @@ public class Node : IHeapItem<Node>
         jumpNeighbours = new List<Node>();
     }
 
-    public int fCost
-    {
-        get { return gCost + hCost; }
-    }
+    public int fCost => gCost + hCost;
 
     public int HeapIndex
     {
-        get { return heapIndex; }
-        set { heapIndex = value; }
+        get => heapIndex;
+        set => heapIndex = value;
     }
 
     public int CompareTo(Node other)
